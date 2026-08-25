@@ -31,14 +31,15 @@ For dry runs, read [DRY-RUN-SCENARIOS.md](DRY-RUN-SCENARIOS.md), simulate only t
 1. Read `docs/ROADMAP.md` from `main` using Git, not an unmerged workspace version.
 2. Record the approved roadmap SHA.
 3. Read `docs/PRODUCT.md`, `docs/TECH.md`, `docs/DESIGN.md`, `docs/STRUCTURE.md`, `docs/adr/`, and root `AGENTS.md` from the same approved `main` context.
-4. Validate milestone and deliverable IDs against MILESTONE-TEMPLATES.md.
-5. If a requested milestone ID is supplied, scope planning to that milestone while preserving its dependencies.
+4. Read the target Linear team key from root `AGENTS.md` under `## Delivery Workflow` in the exact form `Linear team: <team-key>`.
+5. Validate milestone and deliverable IDs against MILESTONE-TEMPLATES.md.
+6. If a requested milestone ID is supplied, scope planning to that milestone while preserving its dependencies.
 
-Stop before Linear mutation if approved steering is missing, contradictory, or lacks stable identifiers.
+Stop before Linear mutation if approved steering is missing, contradictory, lacks stable identifiers, or does not establish the target Linear team key.
 
 ## Load current Linear state
 
-Exhaustively retrieve every issue containing a `Roadmap sync key:` value in the configured Linear team. Use an explicitly correct team scope and follow pagination until the API proves there are no more pages. Include each issue's description, state, parent, and dependencies.
+Exhaustively retrieve every issue containing a `Roadmap sync key:` value in the configured Linear team. Use the exact team key loaded from approved root `AGENTS.md`, follow pagination until the API proves there are no more pages, and record the page count plus the terminal no-next-page or `hasNextPage=false` signal. Include each issue's description, state, parent, and dependencies.
 
 Build the complete map from sync key to Linear issues before planning. If correct team scope or pagination completeness cannot be proven, return BLOCKED and perform no Linear mutation.
 
@@ -93,7 +94,7 @@ Include the stable sync key in every description.
 
 Do not move any issue to Agent Ready. Do not mutate active or terminal-state issues.
 
-Apply parent and dependency links only when the configured Linear API's mutation semantics are known and every issue actually mutated by that operation is in Draft or Needs Planning. Otherwise classify the proposal as BLOCKED. Never mutate an active or terminal-state issue to establish a parent or dependency relation.
+Before applying parent or dependency links, inspect and record the exact current Linear tool schema for the relation operation. Apply links only when that schema establishes which issues the operation mutates and every issue actually mutated by that operation is in Draft or Needs Planning. Otherwise classify the proposal as BLOCKED. Never mutate an active or terminal-state issue to establish a parent or dependency relation.
 
 Use the configured Linear tool's idempotency support when available. Before retrying an uncertain write, fetch by sync key and reconcile instead of blindly creating.
 

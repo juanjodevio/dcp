@@ -73,6 +73,7 @@ Use `Draft` or `Needs Planning`.
 ### Skipped active tickets
 ### Duplicate conflicts
 ### Unsupported mutations
+### Stale draft tickets
 ### Remaining coverage gaps
 ### Result
 Use `SYNCED`, `PARTIAL`, or `BLOCKED`.
