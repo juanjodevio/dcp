@@ -12,6 +12,8 @@ Turn approved roadmap intent into draft Linear work. Never change roadmap intent
 
 Read [MILESTONE-TEMPLATES.md](MILESTONE-TEMPLATES.md) before planning or mutating Linear.
 
+During live and dry runs, the parent workflow must not edit repository files, steering docs, ADRs, or application code. The only permitted repository-local writes are the required evidence and reconciliation artifacts under `.agent-delivery/runs/`.
+
 ## Parse the invocation
 
 Accept exactly:
@@ -28,7 +30,7 @@ For dry runs, read [DRY-RUN-SCENARIOS.md](DRY-RUN-SCENARIOS.md), simulate only t
 
 1. Read `docs/ROADMAP.md` from `main` using Git, not an unmerged workspace version.
 2. Record the approved roadmap SHA.
-3. Read PRODUCT, TECH, DESIGN, STRUCTURE, ADRs, and root AGENTS.md from the same approved context.
+3. Read `docs/PRODUCT.md`, `docs/TECH.md`, `docs/DESIGN.md`, `docs/STRUCTURE.md`, `docs/adr/`, and root `AGENTS.md` from the same approved `main` context.
 4. Validate milestone and deliverable IDs against MILESTONE-TEMPLATES.md.
 5. If a requested milestone ID is supplied, scope planning to that milestone while preserving its dependencies.
 
@@ -36,15 +38,17 @@ Stop before Linear mutation if approved steering is missing, contradictory, or l
 
 ## Load current Linear state
 
-Retrieve existing milestone parent issues and deliverable tickets, including description, state, parent, dependencies, and every `Roadmap sync key:` value.
+Exhaustively retrieve every issue containing a `Roadmap sync key:` value in the configured Linear team. Use an explicitly correct team scope and follow pagination until the API proves there are no more pages. Include each issue's description, state, parent, and dependencies.
 
-Build a unique map from sync key to Linear issue.
+Build the complete map from sync key to Linear issues before planning. If correct team scope or pagination completeness cannot be proven, return BLOCKED and perform no Linear mutation.
 
-Block a sync key when:
+Handle existing keys as follows:
 
-- more than one issue claims it;
-- an issue is Agent Ready, active, completed, canceled, or otherwise outside Draft and Needs Planning and differs from the roadmap; or
-- the required mutation is unsupported by the configured Linear tools.
+- BLOCKED when more than one issue claims a key;
+- SKIP_ACTIVE when exactly one issue is Agent Ready, active, completed, canceled, or otherwise outside Draft and Needs Planning, whether or not it differs from the roadmap; or
+- BLOCKED when a required mutation is unsupported by the configured Linear tools.
+
+Compare every key in the complete Linear map to every stable key in the approved roadmap. Record every Linear key absent from the approved roadmap as stale, including its issue and state.
 
 Never delete, cancel, close, or downgrade work.
 
@@ -66,7 +70,15 @@ For every proposed issue:
 4. Confirm parent and dependency keys exist.
 5. Confirm the proposal does not change roadmap intent.
 
-Classify each proposal as CREATE, REFINE, UNCHANGED, SKIP_ACTIVE, or BLOCKED.
+Canonical content is the title and template-required description content, including the immutable sync key, normalized for line endings and insignificant surrounding whitespace. Allowed relations are the parent sync key and dependency sync-key set required by the approved roadmap.
+
+Classify each proposal deterministically:
+
+- CREATE only when no exact sync key exists after the exhaustive search. Immediately before the CREATE, search the exact sync key again in the same team and fully paginate the result; reconcile any match instead of creating.
+- REFINE only when exactly one Draft or Needs Planning issue exists and its normalized canonical content or allowed relations differ.
+- UNCHANGED only when exactly one Draft or Needs Planning issue already matches normalized canonical content and allowed relations and the workflow performs no write for it.
+- SKIP_ACTIVE when exactly one issue exists in Agent Ready, active, completed, canceled, or any other state outside Draft and Needs Planning.
+- BLOCKED for duplicate keys, incomplete or unscoped search, ambiguity, or any required unsupported mutation.
 
 ## Synchronize Linear
 
@@ -81,6 +93,8 @@ Include the stable sync key in every description.
 
 Do not move any issue to Agent Ready. Do not mutate active or terminal-state issues.
 
+Apply parent and dependency links only when the configured Linear API's mutation semantics are known and every issue actually mutated by that operation is in Draft or Needs Planning. Otherwise classify the proposal as BLOCKED. Never mutate an active or terminal-state issue to establish a parent or dependency relation.
+
 Use the configured Linear tool's idempotency support when available. Before retrying an uncertain write, fetch by sync key and reconcile instead of blindly creating.
 
 ## Report
@@ -90,7 +104,9 @@ Write `.agent-delivery/runs/roadmap-<approved-roadmap-sha>/reconciliation.md` us
 Return:
 
 - SYNCED when every selected roadmap deliverable has exactly one matching current ticket;
-- PARTIAL when safe draft mutations succeeded but active or stale work needs human attention; or
+- PARTIAL when safe draft mutations succeeded but active or stale work needs human attention; any stale draft or SKIP_ACTIVE issue forces PARTIAL; or
 - BLOCKED when ambiguity, duplicates, unsupported mutations, or steering conflicts prevent safe synchronization.
 
-List the exact human action for every non-SYNCED result.
+Apply verdict precedence `BLOCKED` > `PARTIAL` > `SYNCED`. Duplicate keys, ambiguity, incomplete or unscoped search, and unsupported operations force BLOCKED.
+
+List the exact human action for every PARTIAL or BLOCKED result.
