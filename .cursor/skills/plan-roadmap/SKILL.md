@@ -104,8 +104,10 @@ Write `.agent-delivery/runs/roadmap-<approved-roadmap-sha>/reconciliation.md` us
 Return:
 
 - SYNCED when every selected roadmap deliverable has exactly one matching current ticket;
-- PARTIAL when safe draft mutations succeeded but active or stale work needs human attention; any stale draft or SKIP_ACTIVE issue forces PARTIAL; or
+- PARTIAL when stale work exists or a SKIP_ACTIVE issue's normalized canonical content or allowed relations differ from the approved roadmap; or
 - BLOCKED when ambiguity, duplicates, unsupported mutations, or steering conflicts prevent safe synchronization.
+
+A SKIP_ACTIVE issue is always no-write. When its normalized canonical content and allowed relations match the approved roadmap, it is informational, does not force PARTIAL, and may contribute to SYNCED.
 
 Apply verdict precedence `BLOCKED` > `PARTIAL` > `SYNCED`. Duplicate keys, ambiguity, incomplete or unscoped search, and unsupported operations force BLOCKED.
 
