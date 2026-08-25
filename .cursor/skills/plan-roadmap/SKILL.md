@@ -22,7 +22,9 @@ Accept exactly:
 - `/plan-roadmap MILESTONE-ID`
 - `/plan-roadmap DRY-RUN scenario-name`
 
-If malformed, show these forms and stop.
+The literal token `DRY-RUN` is reserved and is never a milestone ID. `/plan-roadmap DRY-RUN` without a scenario is malformed.
+
+If malformed, show these forms and stop before loading approved intent, launching the Planner, writing evidence, or calling Linear.
 
 For dry runs, read [DRY-RUN-SCENARIOS.md](DRY-RUN-SCENARIOS.md), simulate only the named scenario, write evidence under `.agent-delivery/runs/roadmap-dry-run-<scenario-name>/`, and perform no external writes.
 

@@ -666,7 +666,8 @@ If no files changed, do not create an empty commit.
 Run:
 
 ```bash
-python - <<'PY'
+python3 - <<'PY'
+import re
 import subprocess
 
 required = (
@@ -681,18 +682,38 @@ required = (
 for path in required:
     subprocess.run(["git", "cat-file", "-e", f"main:{path}"], check=True)
 
+agents = subprocess.check_output(
+    ["git", "show", "main:AGENTS.md"],
+    text=True,
+)
+delivery = re.search(
+    r"^## Delivery Workflow\s*$([\s\S]*?)(?=^## |\Z)",
+    agents,
+    re.MULTILINE,
+)
+assert delivery, "AGENTS.md missing ## Delivery Workflow"
+team_keys = re.findall(
+    r"^Linear team: ([^\s<>]+)\s*$",
+    delivery.group(1),
+    re.MULTILINE,
+)
+assert len(team_keys) == 1, (
+    "## Delivery Workflow must contain exactly one "
+    "Linear team: <team-key>"
+)
+
 print("approved steering on main: OK")
 PY
 ```
 
-Expected after separate product-steering work: `approved steering on main: OK`.
+Expected after separate product-steering work: `approved steering on main: OK`. A missing, malformed, or duplicate `Linear team: <team-key>` entry is BLOCKED.
 
 - [ ] **Step 2: Validate roadmap identifiers**
 
 Run:
 
 ```bash
-python - <<'PY'
+python3 - <<'PY'
 import re
 import subprocess
 
@@ -732,6 +753,7 @@ Produce:
 
 ```text
 Approved steering on main: READY or BLOCKED
+Linear team configuration: READY or BLOCKED
 Roadmap stable IDs: READY or BLOCKED
 Linear read access: READY or BLOCKED
 Linear draft mutation tools: READY or BLOCKED

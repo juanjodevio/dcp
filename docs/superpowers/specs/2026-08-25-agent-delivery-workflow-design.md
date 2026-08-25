@@ -99,7 +99,7 @@ Temporary run state is a convenience for resuming local work. It does not overri
 Before the first real delivery run, the repository must have:
 
 - the steering documents listed above, bootstrapped from the existing session handoff and approved by a human;
-- a root `AGENTS.md` that points agents to those documents;
+- a root `AGENTS.md` that points agents to those documents and contains a `## Delivery Workflow` section with `Linear team: <team-key>`;
 - `dev` and `main` branches with direct pushes blocked;
 - a GitHub remote and authenticated `gh` CLI;
 - Linear states named `Needs Planning`, `Agent Ready`, and `Blocked — Human`;

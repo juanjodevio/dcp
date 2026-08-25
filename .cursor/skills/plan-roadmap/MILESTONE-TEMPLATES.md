@@ -67,6 +67,8 @@ Use `Draft` or `Needs Planning`.
 ## Reconciliation Report
 
 ### Approved roadmap SHA
+### Linear pagination proof
+### Relation mutation schema proof
 ### Created tickets
 ### Refined tickets
 ### Unchanged tickets

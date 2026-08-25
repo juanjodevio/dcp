@@ -35,7 +35,7 @@ Expected: make no Linear mutations and return BLOCKED.
 ## milestone-dependency
 
 M2 depends on completion evidence from M1. The matching M1 and M2 milestone tickets are both in Needs Planning.
-Expected: create the dependency edge and do not mark either milestone Agent Ready.
+Expected: when the recorded exact current Linear schema proves the relation operation mutates no protected issue, create the dependency edge; otherwise return BLOCKED and create no edge. Never mark either milestone Agent Ready.
 
 ## stale-draft
 
