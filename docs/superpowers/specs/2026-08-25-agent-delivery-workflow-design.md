@@ -1,27 +1,29 @@
 # Local-First Agent Delivery Workflow
 
 **Date:** 2026-08-25  
-**Status:** Approved design; awaiting written-spec review
+**Status:** Approved
 
 ## Purpose
 
 Validate an agent-driven software delivery workflow without first building an orchestration platform.
 
-The initial system is a project-local Cursor skill invoked manually:
+The initial system uses two project-local Cursor skills invoked manually:
 
 ```text
+/plan-roadmap
 /agent-delivery LINEAR-ID
 ```
 
-The skill coordinates fresh planning, implementation, review, and technical-governance agents. Humans approve generated plans, resolve ambiguity, and merge pull requests. Automation is added only after repeated manual runs reveal stable transitions worth automating.
+`/plan-roadmap` turns the approved roadmap into milestones and draft Linear work. `/agent-delivery` coordinates fresh ticket refinement, implementation, review, and technical-governance agents. Humans approve roadmap changes, move tickets to `Agent Ready`, resolve ambiguity, and merge pull requests. Automation is added only after repeated manual runs reveal stable transitions worth automating.
 
 ## Decisions
 
 - Linear is the canonical source for work scope, acceptance criteria, dependencies, and status.
 - GitHub is the canonical Git forge, pull-request system, and merge record.
 - Product steering documents and ADRs are the canonical sources for durable product and technical direction.
+- The version of `docs/ROADMAP.md` merged into `main` authorizes the Planner to create and refine corresponding draft Linear work without a second planning approval.
 - The first version runs locally in Cursor and is started manually.
-- The workflow lives in `.cursor/skills/agent-delivery/` in the product repository.
+- The workflows live in `.cursor/skills/plan-roadmap/` and `.cursor/skills/agent-delivery/` in the product repository.
 - Feature branches target `dev`. Milestone release pull requests target `main`.
 - Humans merge into both `dev` and `main` during the bootstrap phase.
 - Planner and developer models are configurable by role.
@@ -41,6 +43,9 @@ Cursor Origin remains an option for later evaluation. The skill must avoid forge
 
 ### Included
 
+- Manual roadmap-to-milestone planning
+- Creation and refinement of draft Linear tickets from the approved roadmap
+- Roadmap coverage and milestone-drift reporting
 - Manual skill invocation with a Linear ticket identifier
 - Optional ticket decomposition by a planner
 - Human approval of generated delivery plans
@@ -112,6 +117,18 @@ The initial skill consists of:
   SKILL.md
   ROLE-CONTRACTS.md
   REPORT-TEMPLATES.md
+
+.cursor/skills/plan-roadmap/
+  SKILL.md
+  MILESTONE-TEMPLATES.md
+
+.cursor/agents/
+  planner.md
+  frontend-developer.md
+  backend-developer.md
+  reviewer-a.md
+  reviewer-b.md
+  cto.md
 ```
 
 `SKILL.md` is explicit-only and uses `disable-model-invocation: true`. It defines the state machine, hard stops, repair limit, context assembly, and handoffs.
@@ -120,9 +137,40 @@ The initial skill consists of:
 
 `REPORT-TEMPLATES.md` defines planner, implementation, verification, review, CTO, repair, and merge-readiness outputs.
 
+`MILESTONE-TEMPLATES.md` defines roadmap coverage, milestone plan, Linear ticket, dependency, and reconciliation outputs.
+
+The optional project subagent files provide stable named roles. Planner and review roles are read-only. Reviewer and CTO files pin their approved models; planner and developer files inherit the selected parent model so they remain configurable. Each skill remains the workflow coordinator and invokes roles explicitly.
+
 No executable helper scripts are required initially. Stable repeated operations may be extracted after the workflow has been exercised.
 
-## Invocation and Status Rules
+## Roadmap Planning Workflow
+
+`/plan-roadmap` reads the approved `docs/ROADMAP.md` from `main`, then compares every active milestone with existing Linear projects, milestones, and tickets.
+
+The Planner:
+
+1. turns roadmap outcomes into dependency-ordered deliverables;
+2. identifies backend, frontend, integration, migration, documentation, and operational work;
+3. defines acceptance criteria, contracts, verification requirements, risks, and milestone dependencies;
+4. creates missing Linear tickets in `Draft` or `Needs Planning`;
+5. refines existing tickets only while they remain in `Draft` or `Needs Planning`;
+6. links every ticket to its roadmap milestone using a stable roadmap identifier; and
+7. reports coverage gaps, stale tickets, conflicts, and milestone drift.
+
+The approved roadmap is sufficient authorization for these draft mutations. Planner does not require a second human approval before creating or refining draft tickets.
+
+Planner may not:
+
+- change `ROADMAP.md` or product intent;
+- move any ticket to `Agent Ready`;
+- rewrite tickets already in `Agent Ready` or an active delivery state;
+- delete, cancel, or close work;
+- resolve roadmap contradictions by assumption; or
+- implement code.
+
+Conflicts between the approved roadmap and current Linear state produce a reconciliation report for a human. The workflow is idempotent: rerunning it updates matching draft work instead of creating duplicates.
+
+## Ticket Invocation and Status Rules
 
 The command is valid for two Linear states.
 
@@ -136,7 +184,7 @@ The skill:
 4. Publishes or presents the proposal.
 5. Stops.
 
-The planner cannot mark its own plan ready. A human reviews the proposal and moves the work to `Agent Ready`.
+The planner may create or refine child tickets in `Draft` or `Needs Planning`. It cannot mark its own plan ready. A human reviews the resulting ticket set and moves eligible work to `Agent Ready`.
 
 ### `Agent Ready`
 
@@ -290,9 +338,9 @@ A human approves and merges the milestone release pull request.
 
 ### Planner
 
-The planner may read Linear context, steering documents, ADRs, and repository structure. It may propose child tickets, dependencies, contracts, acceptance criteria, and risks.
+The planner owns roadmap-to-work decomposition and ticket quality. It may read the approved roadmap, Linear context, steering documents, ADRs, and repository structure. Through the parent workflow it may create and refine draft Linear milestones, tickets, dependencies, contracts, acceptance criteria, integration work, and risks.
 
-It may not edit code, approve its own plan, alter steering truth, or open and merge implementation pull requests.
+It may not edit code, approve its own plan, alter steering truth, move tickets to `Agent Ready`, mutate active tickets, or open and merge implementation pull requests.
 
 ### Frontend and backend developers
 
@@ -379,6 +427,9 @@ These files must not contain credentials or raw secrets. Reports intended to sur
 
 Validate the skill against fixtures covering:
 
+- an approved roadmap milestone with no Linear tickets;
+- an idempotent rerun that refines existing draft tickets without duplication;
+- a roadmap-to-Linear conflict involving an active ticket;
 - an atomic backend ticket;
 - a parent ticket requiring frontend and backend decomposition;
 - a missing acceptance criterion;
@@ -392,8 +443,8 @@ Validate the skill against fixtures covering:
 
 The first successful slice is one Linear ticket that:
 
-1. is planned if necessary;
-2. receives human approval;
+1. is created or refined from an approved roadmap milestone;
+2. receives human `Agent Ready` approval;
 3. is implemented by one fresh local developer agent;
 4. passes deterministic local checks;
 5. receives independent approval from Reviewer A and Reviewer B;
@@ -405,6 +456,9 @@ The first successful slice is one Linear ticket that:
 
 The workflow is validated when:
 
+- every active roadmap deliverable maps to exactly one Linear sync key;
+- rerunning roadmap planning refines draft work without creating duplicates;
+- active-ticket or roadmap conflicts are reported without unsafe mutation;
 - every decision is traceable to the ticket, SHA, and role report;
 - no agent crosses its role boundary;
 - a new SHA reliably invalidates old evidence;
