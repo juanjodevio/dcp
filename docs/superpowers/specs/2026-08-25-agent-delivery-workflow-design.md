@@ -22,9 +22,12 @@ The initial system uses two project-local Cursor skills invoked manually:
 - GitHub is the canonical Git forge, pull-request system, and merge record.
 - Product steering documents and ADRs are the canonical sources for durable product and technical direction.
 - The version of `docs/ROADMAP.md` merged into `main` authorizes the Planner to create and refine corresponding draft Linear work without a second planning approval.
+- Roadmap authority is resolved by mode. While no `origin` remote exists, the committed local `main` branch is the approved authority in `local-main-bootstrap` mode. Once an `origin` remote exists, authority is `origin-main`: fetch `origin/main`, require local `main` to equal it, and fail closed on divergence or fetch failure. Every report records the authority mode and the resolved roadmap SHA.
+- Roadmap milestone activity is derived from the Linear ticket references recorded in the approved roadmap, not from roadmap prose.
+- After creating tickets, the roadmap planning workflow opens a mechanical roadmap-link pull request targeting `main` for human merge. It adds only Linear ticket reference lines and never commits to `main`.
 - The first version runs locally in Cursor and is started manually.
 - The workflows live in `.cursor/skills/plan-roadmap/` and `.cursor/skills/agent-delivery/` in the product repository.
-- Feature branches target `dev`. Milestone release pull requests target `main`.
+- Feature branches target `dev`. Milestone release pull requests and mechanical roadmap-link pull requests target `main`.
 - Humans merge into both `dev` and `main` during the bootstrap phase.
 - Planner and developer models are configurable by role.
 - Reviewer A uses GPT-5.6 Sol.
@@ -101,7 +104,7 @@ Before the first real delivery run, the repository must have:
 - the steering documents listed above, bootstrapped from the existing session handoff and approved by a human;
 - a root `AGENTS.md` that points agents to those documents and contains a `## Delivery Workflow` section with `Linear team: <team-key>`;
 - `dev` and `main` branches with direct pushes blocked;
-- a GitHub remote and authenticated `gh` CLI;
+- a GitHub remote and authenticated `gh` CLI. Until this exists, roadmap planning runs in `local-main-bootstrap` authority mode and reports its mechanical roadmap-link pull request as PARTIAL or BLOCKED with the exact setup action rather than committing to `main`;
 - Linear states named `Needs Planning`, `Agent Ready`, and `Blocked — Human`;
 - one verification command documented in `AGENTS.md`; and
 - `.agent-delivery/` excluded from Git.
@@ -121,6 +124,7 @@ The initial skill consists of:
 .cursor/skills/plan-roadmap/
   SKILL.md
   MILESTONE-TEMPLATES.md
+  DRY-RUN-SCENARIOS.md
 
 .cursor/agents/
   planner.md
@@ -137,27 +141,35 @@ The initial skill consists of:
 
 `REPORT-TEMPLATES.md` defines planner, implementation, verification, review, CTO, repair, and merge-readiness outputs.
 
-`MILESTONE-TEMPLATES.md` defines roadmap coverage, milestone plan, Linear ticket, dependency, and reconciliation outputs.
+`MILESTONE-TEMPLATES.md` defines roadmap authoring forms, required parsing patterns, sync-key exactness, milestone activity derivation, and the roadmap coverage, milestone plan, Linear ticket, dependency, and reconciliation outputs.
 
-The optional project subagent files provide stable named roles. Planner and review roles are read-only. Reviewer and CTO files pin their approved models; planner and developer files inherit the selected parent model so they remain configurable. Each skill remains the workflow coordinator and invokes roles explicitly.
+`DRY-RUN-SCENARIOS.md` defines the named roadmap planning fixtures. Its second-level headings are the complete set of valid scenario names, and an unknown name lists the valid names and stops.
+
+The optional project subagent files provide stable named roles. Planner and review roles are declared read-only. Reviewer and CTO files pin their approved models; planner and developer files inherit the selected parent model so they remain configurable. Each skill remains the workflow coordinator and invokes roles explicitly.
+
+A `readonly: true` frontmatter value is a declaration inside a prompt asset, not an enforcement boundary. Whether Cursor actually restricts a discovered subagent's tools must be verified in the product, and that verification is a human acceptance item.
 
 No executable helper scripts are required initially. Stable repeated operations may be extracted after the workflow has been exercised.
 
 ## Roadmap Planning Workflow
 
-`/plan-roadmap` reads the approved `docs/ROADMAP.md` from `main`, then compares every active milestone with existing Linear projects, milestones, and tickets.
+`/plan-roadmap` resolves roadmap authority, reads the approved `docs/ROADMAP.md` from `main` at that authority commit, then compares every active milestone with existing Linear projects, milestones, and tickets.
+
+Milestone activity is derived from the `Linear tickets:` references recorded in each approved milestone section. A milestone with no references, or with any referenced ticket in a nonterminal state, is active. A milestone whose every referenced ticket is completed is complete, and the workflow generates no fresh drafts for it. A canceled, unresolvable, or contradicting reference needs human reconciliation and also produces no fresh drafts.
 
 The Planner:
 
 1. turns roadmap outcomes into dependency-ordered deliverables;
 2. identifies backend, frontend, integration, migration, documentation, and operational work;
 3. defines acceptance criteria, contracts, verification requirements, risks, and milestone dependencies;
-4. creates missing Linear tickets in `Draft` or `Needs Planning`;
-5. refines existing tickets only while they remain in `Draft` or `Needs Planning`;
-6. links every ticket to its roadmap milestone using a stable roadmap identifier; and
+4. proposes missing Linear tickets in `Draft` or `Needs Planning`;
+5. proposes refinements to existing tickets only while they remain in `Draft` or `Needs Planning`;
+6. assigns every ticket a stable roadmap sync key matched only by full-value equality, so `M1` never matches `M10` and `M1-D1` never matches `M1-D10`; and
 7. reports coverage gaps, stale tickets, conflicts, and milestone drift.
 
-The approved roadmap is sufficient authorization for these draft mutations. Planner does not require a second human approval before creating or refining draft tickets.
+The parent workflow, not the Planner, applies the permitted Linear mutations and owns the Reconciliation Report.
+
+The approved roadmap is sufficient authorization for these draft mutations. The workflow does not require a second human approval before creating or refining draft tickets.
 
 Planner may not:
 
@@ -167,6 +179,10 @@ Planner may not:
 - delete, cancel, or close work;
 - resolve roadmap contradictions by assumption; or
 - implement code.
+
+Duplicate roadmap keys, duplicate Linear sync keys, unproven roadmap authority, and unproven search scope or pagination fail closed on every run, including a run scoped to a single milestone. Stale detection is always global.
+
+After a live run creates tickets, the workflow opens one mechanical roadmap-link pull request from a dedicated branch into `main`. It may add only `Linear tickets:` reference lines, must never change roadmap intent, and is merged by a human. When GitHub is unavailable, the branch stays local and unmerged and the run reports PARTIAL or BLOCKED with the exact setup action.
 
 Conflicts between the approved roadmap and current Linear state produce a reconciliation report for a human. The workflow is idempotent: rerunning it updates matching draft work instead of creating duplicates.
 
@@ -320,7 +336,7 @@ The integration ticket verifies the combined behavior after its dependencies mer
 
 ## Milestone Releases
 
-Feature agents never merge directly to `main`.
+Feature agents never merge directly to `main`. No agent commits or pushes to `main`; the mechanical roadmap-link pull request is the only agent-authored change targeting `main`, and a human merges it.
 
 When all tickets in a Linear milestone are complete, the CTO prepares a `dev` to `main` release proposal containing:
 
@@ -393,6 +409,11 @@ Automated unattended merging requires external enforcement and is deferred.
 
 The skill fails closed for:
 
+- unproven roadmap authority, including a failed `origin/main` fetch or a local `main` that diverges from `origin/main`;
+- duplicate approved roadmap identifiers or duplicate Linear sync keys;
+- a Linear issue description with zero or more than one `Roadmap sync key:` line;
+- a malformed milestone argument or a milestone argument absent from the approved roadmap;
+- an unknown dry-run scenario name;
 - missing or ambiguous acceptance criteria;
 - unapproved decomposition;
 - unresolved ticket dependencies;
@@ -430,6 +451,11 @@ Validate the skill against fixtures covering:
 - an approved roadmap milestone with no Linear tickets;
 - an idempotent rerun that refines existing draft tickets without duplication;
 - a roadmap-to-Linear conflict involving an active ticket;
+- a duplicate approved roadmap identifier during a milestone-scoped run;
+- prefix-neighbour sync keys such as `M10` and `M1-D10` that must not satisfy `M1` and `M1-D1`;
+- a complete milestone derived from its Linear ticket references;
+- an `origin/main` divergence or fetch failure;
+- an unavailable GitHub forge during the mechanical roadmap-link pull request;
 - an atomic backend ticket;
 - a parent ticket requiring frontend and backend decomposition;
 - a missing acceptance criterion;
@@ -457,8 +483,11 @@ The first successful slice is one Linear ticket that:
 The workflow is validated when:
 
 - every active roadmap deliverable maps to exactly one Linear sync key;
+- sync keys are matched only by full-value equality, so prefix neighbours never collide;
 - rerunning roadmap planning refines draft work without creating duplicates;
 - active-ticket or roadmap conflicts are reported without unsafe mutation;
+- roadmap authority mode and the resolved roadmap SHA appear in every report;
+- the mechanical roadmap-link pull request is opened for human merge and never merged by an agent;
 - every decision is traceable to the ticket, SHA, and role report;
 - no agent crosses its role boundary;
 - a new SHA reliably invalidates old evidence;
