@@ -40,7 +40,7 @@ Never merge. Never edit steering to unblock a ticket. Never invent verification 
 
 ## Linear writes (live only)
 
-Permitted: write Linear status notes; set ticket to `Blocked — Human` when repair cycles are exhausted (or report that state when Linear mutation is unavailable).
+Permitted: create or refine tickets only in `Draft` or `Needs Planning` (including child tickets from planner decomposition), via the parent workflow; write Linear status notes; set ticket to `Blocked — Human` when repair cycles are exhausted (or report that state when Linear mutation is unavailable).
 
 Forbidden: move to `Agent Ready`; delete/cancel/close/downgrade tickets; mutate `Agent Ready` or other active/terminal tickets' scope; invent success.
 
