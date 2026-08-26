@@ -24,7 +24,7 @@ Python package manager is **uv** ([ADR-0007](docs/adr/0007-python-package-manage
 - Read steering docs and relevant ADRs before changing durable behavior.
 - Keep domain/core free of DBOS, Temporal, AWS SDK, and Elementary imports.
 - Do not reimplement dbt’s model DAG; invoke dbt via runners and consume artifacts.
-- Feature work targets `dev`; milestone releases use `dev` → `main` (see agent-delivery design).
+- Feature work targets `dev`; milestone releases use `dev` → `main`. Delivery uses `/plan-roadmap` and thin `/agent-delivery` wrapping Superpowers (SDD, review, finish), with project `frontend-developer` for UI tickets (see agent-delivery design).
 - Update the owning steering doc (or add a superseding ADR) when durable truth changes—do not only patch `AGENTS.md`.
 
 ## Safety And Approval Boundaries

@@ -2,11 +2,13 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Build and validate a project-local `/agent-delivery LINEAR-ID` skill that coordinates human-gated planning, implementation, verification, dual review, CTO review, and merge-readiness reporting.
+**Goal:** Build and validate a thin project-local `/agent-delivery LINEAR-ID` skill that wraps Superpowers delivery with Linear eligibility, GitHub PRs to `dev`, a specialized frontend implementer, and a CTO steering-drift gate.
 
-**Architecture:** A single explicit-only Cursor skill owns workflow sequencing and hard stops. Six project custom subagents provide stable named roles; supporting markdown files define shared contracts, report schemas, and dry-run fixtures. Local ignored run files preserve resumable progress, while Linear, GitHub, and steering documents remain canonical.
+**Architecture:** `/agent-delivery` owns preflight, Linear gates, role selection, repair cap, CTO handoff, run records, and Superpowers skill invocation. Backend tickets use Superpowers `subagent-driven-development` with the stock implementer. Frontend tickets use the same SDD loop with `.cursor/agents/frontend-developer.md` as the implementer packet. Code review uses `requesting-code-review`; finish uses `finishing-a-development-branch`; worktrees use `using-git-worktrees` only when isolation is required. Project agents are only `planner` (from `/plan-roadmap`), `frontend-developer`, and `cto`.
 
-**Tech Stack:** Cursor Agent Skills, Cursor custom subagents, Markdown/YAML frontmatter, Git, GitHub CLI, Linear MCP, shell verification commands
+**Tech Stack:** Cursor Agent Skills, Cursor custom subagents, Superpowers plugin skills, Markdown/YAML frontmatter, Git, GitHub CLI (`gh`), Linear MCP
+
+**Spec:** `docs/superpowers/specs/2026-08-25-agent-delivery-workflow-design.md` (revised 2026-08-25)
 
 ## Global Constraints
 
@@ -14,75 +16,43 @@
 - Do not require Cursor Cloud, a coordinator service, PostgreSQL, webhooks, or a credential broker.
 - Linear owns scope and status; GitHub owns code, pull requests, reviews, and merges.
 - Humans approve plans and merge pull requests.
-- Feature branches start from `dev`; milestone pull requests target `main`.
-- Reviewer A and CTO use GPT-5.6 Sol.
-- Reviewer B uses Claude Opus 5.
-- Planner and developer models remain configurable by inheriting the parent model.
+- Feature branches start from `dev` and are named `feat/<linear-id>-<short-slug>`; milestone PRs target `main`.
+- Reuse Superpowers for implement / review / finish; do not reimplement those loops in project skills.
+- Do not create project `backend-developer`, `reviewer-a`, or `reviewer-b` agents.
+- Do not overwrite Superpowers plugin files; specialize frontend via the project implementer packet only.
+- Keep a thin read-only project `cto` (model `gpt-5.6-sol`) for scope and steering drift after Superpowers code review.
+- Planner and `frontend-developer` inherit the parent model (`model: inherit`).
 - Every delegated role is a fresh run.
-- Planner, reviewers, and CTO are read-only.
 - A changed head SHA invalidates all earlier verification and review evidence.
-- Stop after two unsuccessful code-repair cycles.
+- Stop after two unsuccessful code-repair cycles; set Linear to `Blocked — Human`.
 - Prompt rules are procedural safeguards, not security boundaries.
-- Do not create or configure an external GitHub repository in this plan.
-- Do not bootstrap product steering documents in this plan; complete that separate prerequisite before the first real ticket.
-- Complete `docs/superpowers/plans/2026-08-25-roadmap-planning-skill.md` first; this plan consumes its shared `.cursor/agents/planner.md`.
+- Complete `docs/superpowers/plans/2026-08-25-roadmap-planning-skill.md` first; this plan consumes shared `.cursor/agents/planner.md` and `.gitignore` entries for `.agent-delivery/`.
+- Do not bootstrap product steering in this plan; steering on `main` is a prerequisite for the first real ticket.
+
+## File map
+
+| Path | Responsibility |
+| --- | --- |
+| `.cursor/agents/cto.md` | Read-only scope / steering-drift gate |
+| `.cursor/agents/frontend-developer.md` | Specialized SDD implementer packet for UI tickets |
+| `.cursor/skills/agent-delivery/SKILL.md` | Thin orchestrator: Linear + Superpowers handoffs |
+| `.cursor/skills/agent-delivery/ROLE-CONTRACTS.md` | Project vs Superpowers ownership |
+| `.cursor/skills/agent-delivery/REPORT-TEMPLATES.md` | Planner, CTO, repair, Linear status, merge-readiness |
+| `.cursor/skills/agent-delivery/DRY-RUN-SCENARIOS.md` | Named dry-run fixtures for delivery gates |
+| `.agent-delivery/runs/<ticket-id>/` | Ignored local run records |
 
 ---
 
-### Task 1: Add read-only review and governance subagents
+### Task 1: Create the CTO subagent
 
 **Files:**
-- Create: `.cursor/agents/reviewer-a.md`
-- Create: `.cursor/agents/reviewer-b.md`
 - Create: `.cursor/agents/cto.md`
 
 **Interfaces:**
-- Consumes: Bounded context assembled by the parent `agent-delivery` skill
-- Produces: Named `reviewer-a`, `reviewer-b`, and `cto` subagents with structured markdown responses
+- Consumes: Bounded review context from `/agent-delivery`
+- Produces: Named `cto` subagent with CTO Report verdicts
 
-- [ ] **Step 1: Create Reviewer A**
-
-Create `.cursor/agents/reviewer-a.md`:
-
-```markdown
----
-name: reviewer-a
-description: Independently reviews an exact pull-request SHA for correctness, regressions, tests, and maintainability. Use only when agent-delivery requests Reviewer A.
-model: gpt-5.6-sol
-readonly: true
----
-
-You are Reviewer A.
-
-Review only the supplied ticket, acceptance criteria, exact diff and head SHA, verification evidence, steering excerpts, ADRs, and repository instructions. Do not request the developer transcript or another reviewer's findings.
-
-Check correctness, edge cases, regressions, security implications, test adequacy, and maintainability. Tie every blocking finding to concrete evidence and a file or behavior.
-
-Do not edit files, run state-changing commands, redefine scope, dismiss another review, or merge. Return the Review Report defined by the caller with exactly one verdict: APPROVE or CHANGES_REQUESTED.
-```
-
-- [ ] **Step 2: Create Reviewer B**
-
-Create `.cursor/agents/reviewer-b.md`:
-
-```markdown
----
-name: reviewer-b
-description: Independently reviews an exact pull-request SHA for correctness, regressions, tests, and maintainability. Use only when agent-delivery requests Reviewer B.
-model: claude-opus-5[effort=high]
-readonly: true
----
-
-You are Reviewer B.
-
-Review only the supplied ticket, acceptance criteria, exact diff and head SHA, verification evidence, steering excerpts, ADRs, and repository instructions. Do not request the developer transcript or another reviewer's findings.
-
-Check correctness, edge cases, regressions, security implications, test adequacy, and maintainability. Tie every blocking finding to concrete evidence and a file or behavior.
-
-Do not edit files, run state-changing commands, redefine scope, dismiss another review, or merge. Return the Review Report defined by the caller with exactly one verdict: APPROVE or CHANGES_REQUESTED.
-```
-
-- [ ] **Step 3: Create the CTO subagent**
+- [ ] **Step 1: Create the CTO**
 
 Create `.cursor/agents/cto.md`:
 
@@ -96,196 +66,188 @@ readonly: true
 
 You are the CTO governance reviewer.
 
-Compare the supplied ticket ancestry, approved scope, exact diff and head SHA, verification evidence, reviewer reports, steering documents, and ADRs.
+Compare the supplied ticket ancestry, approved scope, exact diff and head SHA, verification evidence, Superpowers code-review report, steering documents, and ADRs.
 
-Evaluate scope drift, product-direction conflicts, architectural drift, missing durable decisions, inappropriate steering edits, and roadmap impact. This is not a third general code review.
+Evaluate scope drift, product-direction conflicts, architectural drift, missing durable decisions, inappropriate steering edits, and roadmap impact. This is not a second general code review.
 
 Do not edit files, silently reinterpret steering, patch the feature branch, or merge. If steering must change, block the feature and propose a separate human-approved steering change. Return the CTO Report defined by the caller with exactly one verdict: APPROVE, CHANGES_REQUESTED, or STEERING_CHANGE_REQUIRED.
 ```
 
-- [ ] **Step 4: Validate frontmatter and role restrictions**
+- [ ] **Step 2: Validate frontmatter**
 
 Run:
 
 ```bash
-python - <<'PY'
+python3 - <<'PY'
 from pathlib import Path
-
-expected = {
-    "reviewer-a.md": ("gpt-5.6-sol", "true"),
-    "reviewer-b.md": ("claude-opus-5[effort=high]", "true"),
-    "cto.md": ("gpt-5.6-sol", "true"),
-}
-
-for filename, (model, readonly) in expected.items():
-    text = (Path(".cursor/agents") / filename).read_text()
-    assert text.startswith("---\n"), filename
-    assert f"model: {model}\n" in text, filename
-    assert f"readonly: {readonly}\n" in text, filename
-    assert "Do not" in text, filename
-
-print("review and governance agent definitions: OK")
+text = Path(".cursor/agents/cto.md").read_text()
+assert text.startswith("---\n")
+assert "name: cto\n" in text
+assert "model: gpt-5.6-sol\n" in text
+assert "readonly: true\n" in text
+assert "not a second general code review" in text
+assert "STEERING_CHANGE_REQUIRED" in text
+assert Path(".cursor/agents/reviewer-a.md").exists() is False
+assert Path(".cursor/agents/reviewer-b.md").exists() is False
+print("cto agent: OK")
 PY
 ```
 
-Expected: `review and governance agent definitions: OK`.
+Expected: `cto agent: OK`.
 
-- [ ] **Step 5: Commit**
+- [ ] **Step 3: Commit**
 
 ```bash
-git add .cursor/agents/reviewer-a.md .cursor/agents/reviewer-b.md .cursor/agents/cto.md
-git commit -m "feat: define review and governance agents"
+git add .cursor/agents/cto.md
+git commit -m "feat: add CTO governance reviewer agent"
 ```
 
 ---
 
-### Task 2: Add writable implementation subagents
+### Task 2: Create the frontend-developer implementer packet
 
 **Files:**
 - Create: `.cursor/agents/frontend-developer.md`
-- Create: `.cursor/agents/backend-developer.md`
 
 **Interfaces:**
-- Consumes: One approved atomic ticket, dependency contracts, relevant code, repository guidance, and verification commands
-- Produces: A scoped implementation on the assigned feature branch plus an Implementation Report
+- Consumes: SDD task brief + Context assembled by `/agent-delivery`
+- Produces: Specialized implementer body for UI tickets (not a Superpowers plugin override)
 
-- [ ] **Step 1: Create the frontend developer**
+- [ ] **Step 1: Create frontend-developer**
 
 Create `.cursor/agents/frontend-developer.md`:
 
 ```markdown
 ---
 name: frontend-developer
-description: Implements one approved frontend Linear ticket on its assigned feature branch. Use only when agent-delivery dispatches frontend work or repairs.
+description: Implements one approved frontend Linear ticket inside the Superpowers SDD loop. Use only when agent-delivery classifies the ticket as frontend.
 model: inherit
-readonly: false
 ---
 
-You are the frontend implementation agent.
+You are the frontend implementer for dcp.
 
-Implement only the supplied approved ticket. Follow the supplied acceptance criteria, UI contract, steering documents, ADRs, repository instructions, and verification commands.
+Before any UI edit, read:
+- `docs/DESIGN.md` (screens, interim UI principles, visual-system deferral)
+- relevant screens in `docs/PRODUCT.md` and the MVP design spec
+- the supplied ticket, acceptance criteria, and contracts
 
-Prefer focused components and preserve existing design patterns. Add or update tests for changed behavior. Run the required checks and report exact evidence.
+Required skill pack (human-installed; see `docs/DESIGN.md`):
+- `vercel-composition-patterns`
+- `web-design-guidelines`
+- `react-best-practices`
+Defer Impeccable until the first real UI ticket unless a design pass needs it earlier.
 
-You may edit code and tests and create scoped commits on the assigned feature branch. Do not merge, approve, expand scope, edit steering artifacts, silently change an interface, or touch unrelated user changes. Return the Implementation Report defined by the caller.
+UI rules:
+- Follow DESIGN.md interim principles (one primary job per screen; Getting started is onboarding, not a dashboard collage).
+- Make dbt vs observability failure distinguishable when touching run status UI.
+- Do not invent a brand system, default AI aesthetic, or visual tokens while DESIGN.md defers the visual system.
+- Prefer progressive disclosure for Advanced runner/AWS settings.
+
+You may edit application UI code, run checks, commit, and prepare a pull request on the assigned branch.
+
+You may not merge, approve, expand scope, edit steering documents or ADRs, silently change agreed interfaces, or overwrite Superpowers plugin files.
+
+Follow the Superpowers SDD implementer report contract supplied by the parent controller (brief path, report path, TDD evidence when required). Escalate with BLOCKED or NEEDS_CONTEXT rather than guessing.
 ```
 
-- [ ] **Step 2: Create the backend developer**
-
-Create `.cursor/agents/backend-developer.md`:
-
-```markdown
----
-name: backend-developer
-description: Implements one approved backend Linear ticket on its assigned feature branch. Use only when agent-delivery dispatches backend work or repairs.
-model: inherit
-readonly: false
----
-
-You are the backend implementation agent.
-
-Implement only the supplied approved ticket. Follow the supplied acceptance criteria, API or data contract, steering documents, ADRs, repository instructions, and verification commands.
-
-Prefer focused modules and preserve existing architecture. Add or update tests for changed behavior. Run the required checks and report exact evidence.
-
-You may edit code and tests and create scoped commits on the assigned feature branch. Do not merge, approve, expand scope, edit steering artifacts, silently change an interface, or touch unrelated user changes. Return the Implementation Report defined by the caller.
-```
-
-- [ ] **Step 3: Validate writable role configuration**
+- [ ] **Step 2: Validate frontmatter and boundaries**
 
 Run:
 
 ```bash
-python - <<'PY'
+python3 - <<'PY'
 from pathlib import Path
-
-for filename in ("frontend-developer.md", "backend-developer.md"):
-    text = (Path(".cursor/agents") / filename).read_text()
-    assert "model: inherit\n" in text, filename
-    assert "readonly: false\n" in text, filename
-    assert "Do not merge" in text, filename
-
-print("developer agent definitions: OK")
+text = Path(".cursor/agents/frontend-developer.md").read_text()
+assert "name: frontend-developer\n" in text
+assert "model: inherit\n" in text
+assert "docs/DESIGN.md" in text
+assert "Do not invent a brand system" in text
+assert "vercel-composition-patterns" in text
+assert Path(".cursor/agents/backend-developer.md").exists() is False
+print("frontend-developer agent: OK")
 PY
 ```
 
-Expected: `developer agent definitions: OK`.
+Expected: `frontend-developer agent: OK`.
 
-- [ ] **Step 4: Commit**
+- [ ] **Step 3: Commit**
 
 ```bash
-git add .cursor/agents/frontend-developer.md .cursor/agents/backend-developer.md
-git commit -m "feat: define frontend and backend agents"
+git add .cursor/agents/frontend-developer.md
+git commit -m "feat: add frontend implementer packet for SDD"
 ```
 
 ---
 
-### Task 3: Define shared role contracts and report schemas
+### Task 3: Define role contracts and report templates
 
 **Files:**
 - Create: `.cursor/skills/agent-delivery/ROLE-CONTRACTS.md`
 - Create: `.cursor/skills/agent-delivery/REPORT-TEMPLATES.md`
 
 **Interfaces:**
-- Consumes: Role-specific prompts and the approved workflow specification
-- Produces: Canonical context boundaries and parseable report formats used by `SKILL.md`
+- Consumes: Approved delivery design ownership table
+- Produces: Binding role boundaries and report schemas Superpowers does not own
 
-- [ ] **Step 1: Write the shared role contracts**
+- [ ] **Step 1: Create ROLE-CONTRACTS.md**
 
 Create `.cursor/skills/agent-delivery/ROLE-CONTRACTS.md`:
 
 ```markdown
 # Agent Delivery Role Contracts
 
-## Shared invariants
+## Ownership
 
-- Every role run is fresh.
-- Every report names the Linear ticket and exact Git SHA it evaluated.
-- Only canonical Linear, GitHub, steering, ADR, and repository evidence may determine a gate.
-- Missing evidence produces BLOCKED, never an inferred success.
-- A new SHA invalidates verification and all reviews for the previous SHA.
+| Concern | Owner |
+| --- | --- |
+| Roadmap ↔ Linear draft sync | `/plan-roadmap` + `planner` |
+| Linear eligibility, Agent Ready gate, repair cap, run records | `/agent-delivery` |
+| Backend implementer | Superpowers SDD stock `implementer-prompt.md` |
+| Frontend implementer | project `frontend-developer` |
+| Task/branch code review | Superpowers `requesting-code-review` |
+| Scope / steering drift | project `cto` |
+| Worktree isolation | Superpowers `using-git-worktrees` when needed |
+| PR / finish options | Superpowers `finishing-a-development-branch` |
+| Repo implementation plans | Superpowers `writing-plans` |
+
+Do not create `backend-developer`, `reviewer-a`, or `reviewer-b`.
 
 ## Planner
 
-Input: parent ticket, steering documents, ADRs, repository map.
-Output: Planner Report.
-Writes: none.
-Hard stop: ambiguous product intent or an unresolvable steering conflict.
+May: read steering/ADRs/roadmap/Linear; propose Linear decomposition; create/refine Draft or Needs Planning children through the parent workflow.
+
+May not: edit code; approve its own plan; move work to Agent Ready; mutate active tickets; merge.
+
+## Backend implementer (Superpowers)
+
+May: implement one approved backend ticket via SDD stock implementer; edit code; run checks; commit.
+
+May not: merge; approve; expand scope; edit steering.
 
 ## Frontend developer
 
-Input: one approved frontend ticket, UI contract, relevant code, repository guidance, verification command.
-Output: Implementation Report.
-Writes: scoped code and tests on the assigned feature branch.
-Hard stop: required scope or interface change.
+May: implement one approved frontend ticket via SDD using this packet; edit UI code; run checks; commit.
 
-## Backend developer
+May not: merge; approve; expand scope; edit steering; invent a deferred brand system.
 
-Input: one approved backend ticket, API/data contract, relevant code, repository guidance, verification command.
-Output: Implementation Report.
-Writes: scoped code and tests on the assigned feature branch.
-Hard stop: required scope, schema, or interface change not approved by the ticket.
+## Code reviewer (Superpowers)
 
-## Reviewer A and Reviewer B
+May: return findings and a verdict for an exact SHA.
 
-Input: ticket, acceptance criteria, exact diff and SHA, verification evidence, relevant steering and ADRs.
-Output: Review Report.
-Writes: none.
-Isolation: no developer transcript and no other reviewer report.
+May not: push fixes; read the developer transcript; redefine requirements; merge.
 
 ## CTO
 
-Input: ticket ancestry, exact diff and SHA, verification evidence, both review reports, all steering documents and ADRs.
-Output: CTO Report.
-Writes: none.
-Boundary: governance and drift only, not a third general code review.
+May: APPROVE, CHANGES_REQUESTED, or STEERING_CHANGE_REQUIRED for scope/steering/ADR drift.
+
+May not: perform a general code review as its primary job; patch the branch; merge; silently reinterpret steering.
 
 ## Human
 
-Approves plans, changes Linear status, resolves blocked states, approves steering changes, and merges pull requests.
+Approves plans, moves tickets to Agent Ready, merges to `dev` and milestone releases to `main`, resolves escalations.
 ```
 
-- [ ] **Step 2: Write the report templates**
+- [ ] **Step 2: Create REPORT-TEMPLATES.md**
 
 Create `.cursor/skills/agent-delivery/REPORT-TEMPLATES.md`:
 
@@ -298,57 +260,21 @@ Use every heading. Write `None` when a non-verdict section has no entries.
 
 ### Ticket
 ### Atomicity
-Use `ATOMIC`, `DECOMPOSE`, or `BLOCKED`.
+Use `ATOMIC` or `NEEDS_DECOMPOSITION`.
 ### Proposed children
-### Dependency edges
-### Interface contracts
-### Integration ticket
+### Dependencies and contracts
+### Acceptance criteria
+### Verification
 ### Risks
-### Steering references
-### Human decision required
-
-## Implementation Report
-
-### Ticket
-### Role
-### Branch
-### Head SHA
-### Files changed
-### Behavior implemented
-### Tests changed
-### Verification performed
-### Scope or contract concerns
 ### Result
-Use `READY_FOR_VERIFICATION` or `BLOCKED`.
-
-## Verification Report
-
-### Ticket
-### Head SHA
-### Commands
-### Exit statuses
-### Failure evidence
-### Result
-Use `PASS` or `FAIL`.
-
-## Review Report
-
-### Ticket
-### Reviewer
-### Head SHA
-### Blocking findings
-### Non-blocking observations
-### Evidence checked
-### Verdict
-Use `APPROVE` or `CHANGES_REQUESTED`.
+Use `READY_FOR_HUMAN` or `BLOCKED`.
 
 ## CTO Report
 
-### Ticket
-### Head SHA
-### Scope assessment
-### Architecture assessment
-### Steering and ADR assessment
+### Ticket and SHA
+### Scope drift
+### Steering and ADR conflicts
+### Architectural concerns
 ### Roadmap impact
 ### Required steering change
 ### Verdict
@@ -356,622 +282,432 @@ Use `APPROVE`, `CHANGES_REQUESTED`, or `STEERING_CHANGE_REQUIRED`.
 
 ## Repair Report
 
-### Ticket
-### Repair cycle
-### Previous SHA
+### Ticket and prior SHA
 ### New SHA
-### Blocking evidence addressed
-### Remaining blockers
+### Findings addressed
+### Findings remaining
+### Verification rerun
+### Repair cycle count
 ### Result
-Use `READY_FOR_REVERIFICATION` or `BLOCKED`.
+Use `READY_TO_REREVIEW`, `BLOCKED_HUMAN`, or `BLOCKED`.
 
-## Merge-Readiness Report
+## Linear Status Note
 
-### Ticket and approved plan
-### Pull request
-### Branch and head SHA
+### Ticket
+### Prior state
+### New state
+### Reason
+### Human action
+
+## Merge Readiness Report
+
+### Linear ticket and plan
+### Branch and pull request
+### Exact SHA
 ### Verification evidence
-### Reviewer A verdict
-### Reviewer B verdict
+### Superpowers code-review verdict
 ### CTO verdict
 ### Repair history
 ### Unresolved non-blocking risks
-### Human actions
+### Human actions required
 ### Result
-Use `MERGE_READY` or `BLOCKED`.
+Use `READY_TO_MERGE`, `PARTIAL`, or `BLOCKED`.
 ```
 
-- [ ] **Step 3: Validate report verdict vocabularies**
+- [ ] **Step 3: Validate templates**
 
 Run:
 
 ```bash
-python - <<'PY'
+python3 - <<'PY'
 from pathlib import Path
-
-text = Path(".cursor/skills/agent-delivery/REPORT-TEMPLATES.md").read_text()
-for verdict in (
-    "ATOMIC",
-    "DECOMPOSE",
-    "READY_FOR_VERIFICATION",
-    "PASS",
-    "CHANGES_REQUESTED",
-    "STEERING_CHANGE_REQUIRED",
-    "READY_FOR_REVERIFICATION",
-    "MERGE_READY",
+roles = Path(".cursor/skills/agent-delivery/ROLE-CONTRACTS.md").read_text()
+reports = Path(".cursor/skills/agent-delivery/REPORT-TEMPLATES.md").read_text()
+for value in (
+    "Superpowers SDD stock",
+    "frontend-developer",
+    "requesting-code-review",
+    "finishing-a-development-branch",
+    "using-git-worktrees",
+    "Do not create `backend-developer`",
 ):
-    assert verdict in text, verdict
-
-print("report templates: OK")
+    assert value in roles, value
+for value in (
+    "## CTO Report",
+    "STEERING_CHANGE_REQUIRED",
+    "## Merge Readiness Report",
+    "Superpowers code-review verdict",
+):
+    assert value in reports, value
+print("agent-delivery contracts: OK")
 PY
 ```
 
-Expected: `report templates: OK`.
+Expected: `agent-delivery contracts: OK`.
 
 - [ ] **Step 4: Commit**
 
 ```bash
 git add .cursor/skills/agent-delivery/ROLE-CONTRACTS.md .cursor/skills/agent-delivery/REPORT-TEMPLATES.md
-git commit -m "feat: define agent delivery contracts"
+git commit -m "feat: define agent-delivery role contracts and reports"
 ```
 
 ---
 
-### Task 4: Define dry-run workflow fixtures
+### Task 4: Define delivery dry-run fixtures
 
 **Files:**
 - Create: `.cursor/skills/agent-delivery/DRY-RUN-SCENARIOS.md`
 
 **Interfaces:**
-- Consumes: The state transitions and gate semantics implemented by `SKILL.md`
-- Produces: Eight deterministic scenarios for validating dispatch, invalidation, repair, and blocking behavior without external writes
+- Consumes: Delivery flow gates from the approved design
+- Produces: Named fixtures; second-level headings are the valid-name list
 
-- [ ] **Step 1: Create the dry-run scenarios**
+- [ ] **Step 1: Create dry-run scenarios**
 
 Create `.cursor/skills/agent-delivery/DRY-RUN-SCENARIOS.md`:
 
 ```markdown
 # Agent Delivery Dry-Run Scenarios
 
-Dry runs simulate state transitions. They do not call Linear, modify Git, create pull requests, or write outside `.agent-delivery/runs/`.
+Dry runs simulate Linear and repository state. They perform no Linear or GitHub writes outside `.agent-delivery/runs/`, and they never merge.
 
-## atomic-backend
+The second-level headings in this file are the complete set of valid scenario names. A requested name that is not one of them is malformed: list every valid scenario name and stop.
 
-State: Agent Ready.
-Evidence: explicit API acceptance criteria and verification command.
-Expected: backend developer dispatch, verification, both reviewers, CTO, MERGE_READY.
+## needs-planning-decompose
 
-## requires-decomposition
+Ticket is `Needs Planning` and not atomic.
+Expected: launch planner (and `writing-plans` only if a repo plan is required), write `plan.md`, stop for human Agent Ready. No SDD, review, or PR.
 
-State: Needs Planning.
-Evidence: one parent requests an API and a web interface.
-Expected: planner returns DECOMPOSE with backend, frontend, and integration children; workflow stops for human approval.
+## agent-ready-backend
 
-## missing-acceptance-criteria
+Atomic backend ticket is `Agent Ready` with clear acceptance criteria.
+Expected: classify backend, invoke Superpowers SDD with stock implementer, then code review, CTO, finish toward `dev`. Never dispatch `frontend-developer`.
 
-State: Agent Ready.
-Evidence: desired behavior is not measurable.
-Expected: BLOCKED before developer dispatch.
+## agent-ready-frontend
 
-## verification-failure
+Atomic frontend ticket is `Agent Ready`.
+Expected: classify frontend, invoke Superpowers SDD using `frontend-developer` packet (not stock implementer body), require DESIGN.md reads, then code review, CTO, finish toward `dev`.
 
-State: Agent Ready.
-Evidence: implementation report is complete; verification exit status is 1.
-Expected: repair cycle 1 begins; reviews do not run.
+## missing-acceptance
 
-## reviewer-disagreement
+`Agent Ready` ticket lacks measurable acceptance criteria.
+Expected: fail closed before SDD; request planning; no branch mutations claimed as success.
 
-State: Agent Ready.
-Evidence: verification passes; Reviewer A approves; Reviewer B requests changes.
-Expected: repair cycle 1 begins; CTO cannot make the change request disappear.
+## unresolved-dependency
 
-## steering-drift
+`Agent Ready` ticket depends on an incomplete sibling.
+Expected: block in preflight; no implementer dispatch.
 
-State: Agent Ready.
-Evidence: code introduces a hard Kubernetes dependency contrary to TECH.md.
-Expected: CTO returns STEERING_CHANGE_REQUIRED; feature stops for a separate human-approved steering change.
+## verification-missing
 
-## stale-evidence
+Repository has no verification entrypoint in `AGENTS.md`.
+Expected: block in preflight; do not invent success.
 
-State: Agent Ready.
-Evidence: SHA one passes all gates; repair pushes SHA two.
-Expected: every SHA-one verification and review result becomes stale; all gates rerun against SHA two.
+## review-changes-requested
 
-## repair-limit
+SDD completes but Superpowers code review returns changes requested.
+Expected: enter repair loop with the same implementer path; invalidate prior evidence on new SHA.
 
-State: Agent Ready.
-Evidence: two code-changing repair cycles fail verification or review.
-Expected: Blocked — Human; no third repair dispatch.
+## cto-steering-drift
+
+Code review approves, but CTO returns `STEERING_CHANGE_REQUIRED`.
+Expected: block merge readiness; propose separate steering change; do not merge.
+
+## repair-exhausted
+
+Two unsuccessful repair cycles complete.
+Expected: set or report `Blocked — Human`; stop; no third repair.
+
+## sha-invalidates-evidence
+
+A repair creates a new head SHA.
+Expected: prior verification and review evidence are stale and must rerun before merge readiness.
 ```
 
-- [ ] **Step 2: Validate scenario coverage**
+- [ ] **Step 2: Validate scenario list**
 
 Run:
 
 ```bash
-python - <<'PY'
+python3 - <<'PY'
+import re
 from pathlib import Path
-
 text = Path(".cursor/skills/agent-delivery/DRY-RUN-SCENARIOS.md").read_text()
-names = (
-    "atomic-backend",
-    "requires-decomposition",
-    "missing-acceptance-criteria",
-    "verification-failure",
-    "reviewer-disagreement",
-    "steering-drift",
-    "stale-evidence",
-    "repair-limit",
-)
-for name in names:
-    assert f"## {name}\n" in text, name
-assert text.count("## ") == 8
-
-print("dry-run scenarios: OK")
+expected = [
+    "needs-planning-decompose",
+    "agent-ready-backend",
+    "agent-ready-frontend",
+    "missing-acceptance",
+    "unresolved-dependency",
+    "verification-missing",
+    "review-changes-requested",
+    "cto-steering-drift",
+    "repair-exhausted",
+    "sha-invalidates-evidence",
+]
+found = re.findall(r"^## (\S+)$", text, re.MULTILINE)
+assert found == expected, found
+assert "complete set of valid scenario names" in text
+print("agent-delivery dry-runs: OK")
 PY
 ```
 
-Expected: `dry-run scenarios: OK`.
+Expected: `agent-delivery dry-runs: OK`.
 
 - [ ] **Step 3: Commit**
 
 ```bash
 git add .cursor/skills/agent-delivery/DRY-RUN-SCENARIOS.md
-git commit -m "test: add agent delivery dry-run scenarios"
+git commit -m "test: add agent-delivery dry-run scenarios"
 ```
 
 ---
 
-### Task 5: Implement the explicit agent-delivery skill
+### Task 5: Implement the thin agent-delivery skill
 
 **Files:**
 - Create: `.cursor/skills/agent-delivery/SKILL.md`
 
 **Interfaces:**
-- Consumes: `/agent-delivery LINEAR-ID` or `/agent-delivery DRY-RUN scenario-name`, custom subagents, contracts, templates, Linear MCP, Git, `gh`, and the repository verification command
-- Produces: Planner, implementation, verification, review, repair, CTO, and merge-readiness reports plus ignored local run state
+- Consumes: `/agent-delivery LINEAR-ID` or `/agent-delivery DRY-RUN scenario-name`; Linear MCP; Superpowers skills; project agents
+- Produces: Run records under `.agent-delivery/runs/<ticket-id>/`; Linear status notes; PR toward `dev` via finish skill (live only)
 
-- [ ] **Step 1: Create the skill**
+- [ ] **Step 1: Create SKILL.md**
 
 Create `.cursor/skills/agent-delivery/SKILL.md`:
 
 ```markdown
 ---
 name: agent-delivery
-description: Coordinates the repository's human-gated Linear-to-GitHub delivery workflow. Invoke explicitly as /agent-delivery LINEAR-ID or /agent-delivery DRY-RUN scenario-name.
+description: Thin Linear/GitHub orchestrator that wraps Superpowers SDD, code review, and finish for one ticket. Invoke as /agent-delivery LINEAR-ID or /agent-delivery DRY-RUN scenario-name.
 disable-model-invocation: true
-icon: git-branch
-color: purple
 ---
 
 # Agent Delivery
 
-Coordinate one ticket. Never weaken a gate to make progress.
+Deliver one Linear ticket through human gates and Superpowers. Do not reimplement SDD, code review, or branch-finish mechanics.
 
-Read [ROLE-CONTRACTS.md](ROLE-CONTRACTS.md) and [REPORT-TEMPLATES.md](REPORT-TEMPLATES.md) before dispatching roles.
+Read [ROLE-CONTRACTS.md](ROLE-CONTRACTS.md) and [REPORT-TEMPLATES.md](REPORT-TEMPLATES.md) before mutating Linear or dispatching roles.
 
-## Parse the invocation
+## Invocation
 
-Accept exactly:
+Accepted forms:
 
 - `/agent-delivery LINEAR-ID`
 - `/agent-delivery DRY-RUN scenario-name`
 
-If the argument is missing or malformed, show these forms and stop.
+`LINEAR-ID` must match the team's issue identifier form from Linear. Reject bare `/agent-delivery` and unknown dry-run names.
 
-For a dry run, read [DRY-RUN-SCENARIOS.md](DRY-RUN-SCENARIOS.md), simulate only the named scenario, write evidence under `.agent-delivery/runs/dry-run-<scenario-name>/`, and perform no external writes.
+For dry runs, read [DRY-RUN-SCENARIOS.md](DRY-RUN-SCENARIOS.md). The second-level headings are the complete valid-name list. Simulate only; write evidence only under `.agent-delivery/runs/`; perform no Linear or GitHub writes.
 
-## Shared safety rules
+## Hard stops
 
-- Linear owns scope and status.
-- GitHub owns commits, pull requests, reviews, and merges.
-- Steering documents and ADRs own durable direction.
-- Humans approve plans and merge pull requests.
-- Do not push directly to `dev` or `main`.
-- Do not merge.
-- Do not overwrite unrelated local changes.
-- Every delegated role must be a fresh custom subagent run.
-- A result applies only to the exact SHA named in its report.
-- A new SHA invalidates all earlier verification, Reviewer A, Reviewer B, and CTO evidence.
-- Any missing evidence, ambiguous requirement, unresolved dependency, or steering conflict is BLOCKED.
-- Allow at most two code-changing repair cycles.
+Fail closed and state the human action when:
 
-## Create the run record
+- acceptance criteria are missing or ambiguous;
+- decomposition is unapproved;
+- dependencies are unresolved;
+- steering contradicts;
+- verification entrypoint is missing from `AGENTS.md`;
+- required Superpowers skills are unavailable;
+- workspace is unsafe and isolation cannot be established;
+- review or CTO blocks;
+- repair cycles are exhausted (max 2).
 
-Use `.agent-delivery/runs/<ticket-id>/`.
+Never merge. Never edit steering to unblock a ticket. Never invent verification success.
 
-Maintain:
+## Preflight
 
-- `run.md`
-- `plan.md` when planning occurs
-- `verification.md`
-- `review-a.md`
-- `review-b.md`
-- `cto-review.md`
-- `repairs.md`
-- `merge-readiness.md`
+1. Load `AGENTS.md` and relevant steering docs.
+2. Fetch the Linear ticket and approved descendants.
+3. Confirm state is `Needs Planning` or `Agent Ready`.
+4. Check unresolved dependencies.
+5. Classify ticket as `frontend`, `backend`, or `integration`.
+6. Confirm verification entrypoint exists in `AGENTS.md`.
+7. Confirm Superpowers skills are available: `subagent-driven-development`, `requesting-code-review`, `finishing-a-development-branch`, and `using-git-worktrees` / `writing-plans` when needed.
+8. Identify `dev` base SHA.
+9. Create or resume `.agent-delivery/runs/<ticket-id>/run.md`.
 
-Record ticket, phase, role models, branch, pull request, current SHA, evidence SHA, and repair count. Never store credentials.
+## Needs Planning
 
-## Load canonical context
+1. Launch fresh `planner` for Linear decomposition when children/contracts are missing.
+2. If a repository implementation plan is also required, invoke Superpowers `writing-plans` and store under `docs/superpowers/plans/`.
+3. Write `plan.md` using the Planner Report template.
+4. Stop for human Agent Ready. Do not start SDD.
 
-1. Read root `AGENTS.md`.
-2. Follow its links to PRODUCT, TECH, DESIGN, ROADMAP, STRUCTURE, and ADRs.
-3. Retrieve the Linear ticket, parent, children, dependencies, state, and acceptance criteria.
-4. Read relevant repository files without broad unrelated loading.
-5. Determine the single verification command from `AGENTS.md`.
+## Agent Ready
 
-Stop if a required source is missing.
-
-## Route by Linear state
-
-### Needs Planning
-
-Launch the `planner` custom subagent with the bounded canonical context and Planner Report template.
-
-Save `plan.md`, present the proposal, and stop. The planner and parent workflow may not mark the ticket Agent Ready.
-
-### Agent Ready
-
-Confirm the ticket is atomic or has a human-approved child plan. Confirm dependencies are complete.
-
-If the ticket is not ready, return BLOCKED and stop.
-
-Any other Linear state is ineligible. Report the accepted states and stop.
-
-## Preflight implementation
-
-1. Confirm the current repository is the ticket's repository.
-2. Confirm `dev` exists locally and matches the intended base.
-3. Inspect worktree status.
-4. Preserve unrelated user changes by creating a separate worktree when needed.
-5. Select `frontend-developer` or `backend-developer` from ticket scope.
-6. Create `feat/<linear-id>-<short-slug>` from `dev`.
-7. Record the base SHA, branch, role, and repair count zero.
-
-Stop if isolation cannot be established safely.
-
-## Implement
-
-Launch the selected developer with one approved ticket, contracts, relevant context, verification command, and Implementation Report template.
-
-Require `READY_FOR_VERIFICATION`. Confirm changes remain in scope. Resolve the exact head SHA and write it to `run.md`.
-
-## Verify
-
-Run the exact command documented by `AGENTS.md`. Record command, times, exit status, concise output, and head SHA in `verification.md`.
-
-On failure, enter the repair loop before launching reviews.
-
-## Open or update the pull request
-
-After verification passes:
-
-1. Confirm all scoped changes are committed.
-2. Push only the feature branch.
-3. Open or update a GitHub pull request targeting `dev`.
-4. Include the Linear ticket, implementation summary, exact SHA, and verification evidence in the pull-request body.
-5. Record the pull-request URL in `run.md`.
-
-Do not merge or enable auto-merge.
-
-## Review
-
-Only after verification passes, launch fresh `reviewer-a` and `reviewer-b` custom subagents independently. Give both the same ticket, acceptance criteria, exact diff and SHA, verification evidence, steering excerpts, ADRs, and Review Report template.
-
-Do not give either reviewer the developer transcript or the other review.
-
-Save both reports. Any CHANGES_REQUESTED verdict enters the repair loop.
-
-## CTO gate
-
-After both code reviews exist, launch the fresh `cto` custom subagent with ticket ancestry, exact diff and SHA, verification evidence, both reviewer reports, all steering documents, ADRs, and the CTO Report template.
-
-- APPROVE continues.
-- CHANGES_REQUESTED enters the repair loop.
-- STEERING_CHANGE_REQUIRED blocks the feature and requests a separate human-approved steering change.
-
-## Repair loop
-
-Increment the repair count only when code changes.
-
-If the count would exceed two, set the result to `Blocked — Human`, summarize all evidence, and stop.
-
-Launch a fresh developer of the original role with the ticket, current diff and SHA, all blocking evidence, repository guidance, and Repair Report template.
-
-After a code change:
-
-1. Resolve the new SHA.
-2. Mark all previous verification and review evidence stale.
-3. Run verification again.
-4. Launch fresh Reviewer A and Reviewer B again.
-5. Launch a fresh CTO again.
-
-Transient execution failures may retry without consuming a repair cycle when no code changed.
-
-## Produce merge readiness
-
-Require all evidence to name the current SHA and contain:
-
-- verification PASS;
-- Reviewer A APPROVE;
-- Reviewer B APPROVE; and
-- CTO APPROVE.
-
-Write `merge-readiness.md` from the Merge-Readiness Report template. Post durable role-labeled summaries to the GitHub pull request when one exists.
-
-Return MERGE_READY with explicit human instructions to inspect and merge into `dev`. Never merge.
+1. Confirm the ticket is atomic with acceptance criteria, interfaces, and verification, or backed by a human-approved child plan. Otherwise fail closed and request planning.
+2. Create or resume branch `feat/<linear-id>-<short-slug>` from `dev`. Use Superpowers `using-git-worktrees` when isolation is required (unclean workspace or parallel children); otherwise a normal feature branch is enough.
+3. **Backend:** invoke Superpowers `subagent-driven-development` with the stock implementer prompt.
+4. **Frontend:** invoke the same SDD process and file-handoff rules, but fill the implementer dispatch from `.cursor/agents/frontend-developer.md` instead of the stock implementer body. Do not edit Superpowers plugin files.
+5. **Integration:** verify combined behavior after dependencies exist on `dev`; do not reimplement child tickets here.
+6. Record verification evidence for the exact head SHA in `verification.md`.
+7. Invoke Superpowers `requesting-code-review`; store output in `code-review.md`.
+8. Launch fresh `cto` with the CTO Report template; store in `cto-review.md`.
+9. On any blocking verification, review, or CTO verdict, run the repair loop (same implementer path as the ticket). Each new SHA invalidates prior evidence. After two unsuccessful repairs, report `Blocked — Human` and stop.
+10. When gates pass, invoke Superpowers `finishing-a-development-branch` for PR options toward `dev`, write the Merge Readiness Report, and leave merge to a human.
+11. Update Linear status notes only as allowed; never move a ticket to Agent Ready from this skill.
 ```
 
-- [ ] **Step 2: Validate skill discovery metadata**
+- [ ] **Step 2: Validate skill metadata and Superpowers handoffs**
 
 Run:
 
 ```bash
-python - <<'PY'
+python3 - <<'PY'
 from pathlib import Path
-
 path = Path(".cursor/skills/agent-delivery/SKILL.md")
 text = path.read_text()
-
 assert text.startswith("---\n")
 assert "name: agent-delivery\n" in text
 assert "disable-model-invocation: true\n" in text
-assert "/agent-delivery LINEAR-ID" in text
-assert "Allow at most two code-changing repair cycles." in text
-assert "Never merge." in text
-assert len(text.splitlines()) < 500
-
-for reference in (
-    "ROLE-CONTRACTS.md",
-    "REPORT-TEMPLATES.md",
-    "DRY-RUN-SCENARIOS.md",
-):
-    assert reference in text
-    assert path.with_name(reference).is_file()
-
+assert "subagent-driven-development" in text
+assert "requesting-code-review" in text
+assert "finishing-a-development-branch" in text
+assert "frontend-developer.md" in text
+assert "stock implementer" in text
+assert "Never merge" in text
+assert "max 2" in text or "two unsuccessful" in text.lower()
+assert Path(".cursor/agents/backend-developer.md").exists() is False
+for ref in ("ROLE-CONTRACTS.md", "REPORT-TEMPLATES.md", "DRY-RUN-SCENARIOS.md"):
+    assert ref in text
+    assert path.with_name(ref).is_file()
+assert len(text.splitlines()) < 200
 print("agent-delivery skill: OK")
 PY
 ```
 
 Expected: `agent-delivery skill: OK`.
 
-- [ ] **Step 3: Scan for forbidden unfinished language**
+- [ ] **Step 3: Scan for forbidden custom roles and unfinished language**
 
 Run:
 
 ```bash
-python - <<'PY'
+python3 - <<'PY'
 from pathlib import Path
-
-forbidden = (
-    "T" + "BD",
-    "TO" + "DO",
-    "FIX" + "ME",
-    "implement " + "later",
-    "fill " + "in",
-)
-
-paths = list(Path(".cursor/skills/agent-delivery").glob("*.md"))
-paths.extend(Path(".cursor/agents").glob("*.md"))
-
-matches = []
-for path in paths:
-    text = path.read_text()
-    for phrase in forbidden:
-        if phrase in text:
-            matches.append(f"{path}: {phrase}")
-
-assert not matches, "\n".join(matches)
-print("unfinished-language scan: OK")
+root = Path(".cursor/skills/agent-delivery")
+agents = Path(".cursor/agents")
+forbidden_files = [
+    agents / "backend-developer.md",
+    agents / "reviewer-a.md",
+    agents / "reviewer-b.md",
+]
+assert not any(p.exists() for p in forbidden_files)
+blob = "\n".join(p.read_text() for p in root.glob("*.md"))
+for phrase in ("T" "BD", "TO" "DO", "FIX" "ME"):
+    assert phrase not in blob, phrase
+print("agent-delivery boundaries: OK")
 PY
 ```
 
-Expected: `unfinished-language scan: OK`.
+Expected: `agent-delivery boundaries: OK`.
 
 - [ ] **Step 4: Commit**
 
 ```bash
 git add .cursor/skills/agent-delivery/SKILL.md
-git commit -m "feat: add local agent delivery workflow"
+git commit -m "feat: add thin agent-delivery Superpowers wrapper"
 ```
 
 ---
 
-### Task 6: Validate discovery and dry-run gates
+### Task 6: Static validation and discovery checklist
 
 **Files:**
-- Modify only if validation exposes a defect:
-  - `.cursor/skills/agent-delivery/SKILL.md`
-  - `.cursor/skills/agent-delivery/ROLE-CONTRACTS.md`
-  - `.cursor/skills/agent-delivery/REPORT-TEMPLATES.md`
-  - `.cursor/skills/agent-delivery/DRY-RUN-SCENARIOS.md`
-  - `.cursor/agents/*.md`
-- Create ignored evidence under: `.agent-delivery/runs/`
+- Modify only if validation exposes a defect under `.cursor/skills/agent-delivery/` or `.cursor/agents/{cto,frontend-developer}.md`
 
 **Interfaces:**
-- Consumes: Cursor's skill discovery, custom subagent discovery, and the eight dry-run fixtures
-- Produces: Evidence that the workflow dispatches the correct roles and fails closed at each gate
+- Consumes: Shipped assets from Tasks 1–5
+- Produces: Evidence under `.agent-delivery/runs/agent-delivery-static-validation/` (ignored)
 
-- [ ] **Step 1: Restart or open a fresh Cursor Agent chat**
+- [ ] **Step 1: Prove plan Create blocks match shipped files** (after Tasks 1–5 land)
 
-Open the skill picker and verify `agent-delivery` appears. Open the available subagent list and verify:
+Run the same style of exact-block parity check used by the roadmap plan against this plan's Create blocks for:
 
-```text
-planner
-frontend-developer
-backend-developer
-reviewer-a
-reviewer-b
-cto
-```
+- `.cursor/agents/cto.md`
+- `.cursor/agents/frontend-developer.md`
+- `.cursor/skills/agent-delivery/ROLE-CONTRACTS.md`
+- `.cursor/skills/agent-delivery/REPORT-TEMPLATES.md`
+- `.cursor/skills/agent-delivery/DRY-RUN-SCENARIOS.md`
+- `.cursor/skills/agent-delivery/SKILL.md`
 
-Expected: the skill and all six project subagents are discoverable.
+Expected: parity OK for all six.
 
-- [ ] **Step 2: Verify malformed invocation fails closed**
+- [ ] **Step 2: User acceptance — discovery**
 
-Invoke:
+In a fresh Cursor Agent chat, confirm skill picker shows `agent-delivery` and subagents include `planner`, `frontend-developer`, and `cto`, and do **not** include `backend-developer`, `reviewer-a`, or `reviewer-b`.
 
-```text
-/agent-delivery
-```
-
-Expected: usage shows the two accepted invocation forms and no external or repository mutation occurs.
-
-- [ ] **Step 3: Run the planning dry run**
+- [ ] **Step 3: User acceptance — dry-runs**
 
 Invoke:
 
 ```text
-/agent-delivery DRY-RUN requires-decomposition
+/agent-delivery DRY-RUN needs-planning-decompose
+/agent-delivery DRY-RUN agent-ready-backend
+/agent-delivery DRY-RUN agent-ready-frontend
+/agent-delivery DRY-RUN cto-steering-drift
+/agent-delivery DRY-RUN repair-exhausted
 ```
 
-Expected: planner output proposes backend, frontend, and integration children, then stops for human approval.
+Expected: backend path never mentions dispatching `frontend-developer`; frontend path requires the frontend packet; CTO drift and repair exhaustion fail closed; no Linear/GitHub writes.
 
-- [ ] **Step 4: Run the successful atomic dry run**
-
-Invoke:
-
-```text
-/agent-delivery DRY-RUN atomic-backend
-```
-
-Expected: simulated backend implementation, PASS verification, two independent approvals, CTO approval, and MERGE_READY.
-
-- [ ] **Step 5: Run each blocking scenario**
-
-Invoke each:
-
-```text
-/agent-delivery DRY-RUN missing-acceptance-criteria
-/agent-delivery DRY-RUN verification-failure
-/agent-delivery DRY-RUN reviewer-disagreement
-/agent-delivery DRY-RUN steering-drift
-/agent-delivery DRY-RUN stale-evidence
-/agent-delivery DRY-RUN repair-limit
-```
-
-Expected:
-
-- missing acceptance criteria blocks before implementation;
-- verification failure skips reviews and starts repair;
-- reviewer disagreement cannot be overridden by the CTO;
-- steering drift requires a separate human-approved steering change;
-- new-SHA evidence invalidates old-SHA evidence; and
-- the repair limit stops before a third code-changing repair.
-
-- [ ] **Step 6: Inspect ignored evidence and repository cleanliness**
-
-Run:
+- [ ] **Step 4: Commit fixes if any**
 
 ```bash
-git status --short
+git add .cursor/skills/agent-delivery .cursor/agents/cto.md .cursor/agents/frontend-developer.md
+git commit -m "fix: tighten agent-delivery Superpowers boundaries"
+```
+
+Skip empty commit if nothing changed.
+
+---
+
+### Task 7: First real-ticket readiness
+
+**Files:**
+- Verify: `AGENTS.md`, steering docs, `.gitignore`, Superpowers plugin availability
+- Verify: Linear states `Needs Planning`, `Agent Ready`, `Blocked — Human`
+- Verify: `dev` and `main` exist with protected direct pushes (human/process)
+- Note: frontend skill installs from `docs/DESIGN.md` before first UI ticket
+
+**Interfaces:**
+- Consumes: Completed `/plan-roadmap` assets + this skill
+- Produces: Go / no-go for the first `/agent-delivery LINEAR-ID` live run
+
+- [ ] **Step 1: Confirm `.agent-delivery/` is ignored**
+
+```bash
 git check-ignore -v .agent-delivery/runs
 ```
 
-Expected: no dry-run evidence appears in Git status, and `.gitignore` is the matching rule.
+- [ ] **Step 2: Confirm verification entrypoint placeholder**
 
-- [ ] **Step 7: Fix validation defects and rerun only affected scenarios**
+Until the app scaffold lands, `AGENTS.md` must either document the real command or explicitly state that delivery blocks until one exists. Do not invent a fake green check.
 
-For each defect, change the smallest relevant prompt or template, then rerun the scenario that exposed it. Do not weaken expected gate behavior.
+- [ ] **Step 3: Confirm Superpowers plugin skills are discoverable in Cursor**
 
-- [ ] **Step 8: Commit validation fixes if any**
+Required: `subagent-driven-development`, `requesting-code-review`, `finishing-a-development-branch`. Optional as needed: `using-git-worktrees`, `writing-plans`.
 
-If files changed:
+- [ ] **Step 4: User acceptance — first atomic backend ticket**
 
-```bash
-git add .cursor/skills/agent-delivery .cursor/agents
-git commit -m "fix: enforce agent delivery gates"
-```
+After a human moves one atomic backend ticket to `Agent Ready`:
 
-If no files changed, do not create an empty commit.
+1. `/agent-delivery LINEAR-ID`
+2. Confirm stock SDD implementer path (not frontend-developer)
+3. Confirm Superpowers review + CTO + finish toward `dev`
+4. Human merges
+
+- [ ] **Step 5: Defer first frontend ticket until skill pack install**
+
+Before the first frontend live run, install the Vercel skills listed in `docs/DESIGN.md`. Defer Impeccable until that ticket unless a design pass needs it earlier.
 
 ---
 
-### Task 7: Prepare first real-ticket prerequisites
+## Execution order
 
-**Files:**
-- Verify: `AGENTS.md`
-- Verify: `docs/PRODUCT.md`
-- Verify: `docs/TECH.md`
-- Verify: `docs/DESIGN.md`
-- Verify: `docs/ROADMAP.md`
-- Verify: `docs/STRUCTURE.md`
-- Verify: `docs/adr/`
-
-**Interfaces:**
-- Consumes: Separately approved product-steering artifacts, Linear workflow configuration, GitHub remote, protected branches, and one stable repository verification command
-- Produces: A binary readiness decision for the first real `/agent-delivery LINEAR-ID` run
-
-- [ ] **Step 1: Verify steering prerequisites**
-
-Run:
-
-```bash
-python - <<'PY'
-from pathlib import Path
-
-required = (
-    "AGENTS.md",
-    "docs/PRODUCT.md",
-    "docs/TECH.md",
-    "docs/DESIGN.md",
-    "docs/ROADMAP.md",
-    "docs/STRUCTURE.md",
-)
-
-missing = [path for path in required if not Path(path).is_file()]
-assert not missing, f"missing steering files: {missing}"
-assert Path("docs/adr").is_dir(), "missing docs/adr/"
-
-print("steering prerequisites: OK")
-PY
-```
-
-Expected after the separate product-steering work: `steering prerequisites: OK`.
-
-- [ ] **Step 2: Verify GitHub and branch prerequisites**
-
-Run:
-
-```bash
-gh auth status
-gh repo view --json nameWithOwner,url
-git show-ref --verify refs/heads/dev
-git show-ref --verify refs/heads/main
-```
-
-Expected: authenticated GitHub CLI, a repository URL, and both local branches. If any command fails, stop; do not create external resources or branches without human approval.
-
-- [ ] **Step 3: Verify Linear workflow prerequisites**
-
-Using the configured Linear integration, confirm the target team has these exact states:
-
-```text
-Needs Planning
-Agent Ready
-Blocked — Human
-```
-
-Expected: all three states exist. If one is missing, stop and ask a Linear administrator to add it.
-
-- [ ] **Step 4: Verify the repository command contract**
-
-Read `AGENTS.md`, extract its single verification command, and run it.
-
-Expected: exit code `0`. If no command is documented or the command fails, the repository is not ready for a real ticket.
-
-- [ ] **Step 5: Report readiness**
-
-Produce a concise result containing:
-
-```text
-Steering: READY or BLOCKED
-GitHub: READY or BLOCKED
-Branches: READY or BLOCKED
-Linear states: READY or BLOCKED
-Verification command: READY or BLOCKED
-First real ticket: READY or BLOCKED
-```
-
-Do not run a real ticket until every line is `READY`.
+1. Finish and merge `/plan-roadmap` (provides `planner` + `.gitignore`).
+2. Execute this plan with Superpowers SDD.
+3. Rewrite is complete when Tasks 1–5 are committed and Task 6 static checks pass; Task 7 may remain partially blocked until verification command and Linear auth exist.

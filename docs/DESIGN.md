@@ -32,6 +32,23 @@ Product surfaces are defined in `docs/PRODUCT.md` and `docs/superpowers/specs/20
 
 Not yet defined. Do not invent a default AI aesthetic. Establish tokens, typography, and layout direction in a follow-up design pass or ADR before polishing the UI beyond usable MVP chrome.
 
+### Frontend agent skills (install before first UI ticket)
+
+Defer Impeccable until the first real UI ticket (it wants `/impeccable init` against a live design context):
+
+```bash
+npx impeccable install
+# then in Cursor: /impeccable init
+```
+
+Install these for the `frontend-developer` packet whenever ready:
+
+```bash
+npx skills add https://github.com/vercel-labs/agent-skills --skill vercel-composition-patterns
+npx skills add https://github.com/vercel-labs/agent-skills --skill web-design-guidelines
+npx skills add https://github.com/vercel-labs/agent-skills --skill react-best-practices
+```
+
 ### Accessibility
 
 Expectation for v0.1: keyboard-reachable primary flows and readable contrast on run logs/status. Full WCAG target level is **Unknown**.
