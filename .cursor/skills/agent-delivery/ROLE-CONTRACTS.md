@@ -18,7 +18,7 @@ Do not create `backend-developer`, `reviewer-a`, or `reviewer-b`.
 
 ## `/agent-delivery`
 
-May: preflight; dispatch roles per ownership table; create or refine tickets only in `Draft` or `Needs Planning` (including child tickets from planner decomposition), via the parent workflow; write Linear status notes; set ticket to `Blocked — Human` when repair cycles are exhausted (or report that state when Linear mutation is unavailable); maintain run records.
+May: preflight; dispatch roles per ownership table; create or refine tickets only in `Draft` or `Needs Planning` (including child tickets from planner decomposition), via the parent workflow; write Linear status notes; when repair cycles are exhausted, write a status note and apply label `blocked-human` (or report that action when Linear mutation is unavailable); maintain run records.
 
 May not: move tickets to `Agent Ready`; delete/cancel/close/downgrade tickets; mutate `Agent Ready` or other active/terminal tickets' scope; invent verification or delivery success; merge; edit steering.
 

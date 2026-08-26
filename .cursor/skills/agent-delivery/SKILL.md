@@ -40,9 +40,9 @@ Never merge. Never edit steering to unblock a ticket. Never invent verification 
 
 ## Linear writes (live only)
 
-Permitted: create or refine tickets only in `Draft` or `Needs Planning` (including child tickets from planner decomposition), via the parent workflow; write Linear status notes; set ticket to `Blocked — Human` when repair cycles are exhausted (or report that state when Linear mutation is unavailable).
+Permitted: create or refine tickets only in `Draft` or `Needs Planning` (including child tickets from planner decomposition), via the parent workflow; write Linear status notes; when repair cycles are exhausted, write a status note and apply label `blocked-human` (or report that action when Linear mutation is unavailable).
 
-Forbidden: move to `Agent Ready`; delete/cancel/close/downgrade tickets; mutate `Agent Ready` or other active/terminal tickets' scope; invent success.
+Forbidden: move to `Agent Ready`; delete/cancel/close/downgrade tickets; mutate `Agent Ready` or other active/terminal tickets' scope; invent success; invent a dedicated Blocked workflow state.
 
 ## Preflight
 
@@ -74,6 +74,6 @@ Forbidden: move to `Agent Ready`; delete/cancel/close/downgrade tickets; mutate 
 6. Record verification evidence for the exact head SHA in `verification.md`.
 7. Invoke Superpowers `requesting-code-review`; store output in `code-review.md`.
 8. Launch fresh `cto` with the CTO Report template; store in `cto-review.md`.
-9. On any blocking verification, review, or CTO verdict, run the repair loop (same implementer path as the ticket). Each new SHA invalidates prior evidence. After two unsuccessful repairs, set or report `Blocked — Human` and stop.
+9. On any blocking verification, review, or CTO verdict, run the repair loop (same implementer path as the ticket). Each new SHA invalidates prior evidence. After two unsuccessful repairs, write a status note, apply label `blocked-human`, and stop.
 10. When gates pass, invoke Superpowers `finishing-a-development-branch` for PR options toward `dev`, write the Merge Readiness Report, and leave merge to a human.
 11. Write Linear status notes per permitted writes above.

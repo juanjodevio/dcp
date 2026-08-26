@@ -47,7 +47,7 @@ Expected: block merge readiness; propose separate steering change; do not merge.
 ## repair-exhausted
 
 Two unsuccessful repair cycles complete.
-Expected: set or report `Blocked — Human`; stop; no third repair.
+Expected: write a status note, apply label `blocked-human`, and stop; no third repair.
 
 ## sha-invalidates-evidence
 

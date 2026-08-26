@@ -31,6 +31,10 @@ Python package manager is **uv** ([ADR-0007](docs/adr/0007-python-package-manage
 
 Linear team: DCP
 
+Required issue states: `Needs Planning`, `Agent Ready`.
+
+When repair cycles are exhausted, `/agent-delivery` writes a Linear status note and applies the issue label `blocked-human` (Linear has no dedicated Blocked workflow state). Do not invent a Blocked status.
+
 ## Safety And Approval Boundaries
 
 - Ask before changing product intent, roadmap priority, public contracts, security/auth posture, or accepted ADR direction.
