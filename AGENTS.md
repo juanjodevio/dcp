@@ -27,6 +27,10 @@ Python package manager is **uv** ([ADR-0007](docs/adr/0007-python-package-manage
 - Feature work targets `dev`; milestone releases use `dev` → `main`. Delivery uses `/plan-roadmap` and thin `/agent-delivery` wrapping Superpowers (SDD, review, finish), with project `frontend-developer` for UI tickets (see agent-delivery design).
 - Update the owning steering doc (or add a superseding ADR) when durable truth changes—do not only patch `AGENTS.md`.
 
+## Delivery Workflow
+
+Linear team: DCP
+
 ## Safety And Approval Boundaries
 
 - Ask before changing product intent, roadmap priority, public contracts, security/auth posture, or accepted ADR direction.
