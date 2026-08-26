@@ -34,6 +34,11 @@ Expected: make no mutation for M1-D1 and return BLOCKED.
 The approved roadmap declares deliverable M1-D2 twice, and the invocation scopes planning to M1.
 Expected: block before Planner launch and before any Linear mutation, report both duplicate declarations, and return BLOCKED even though the run is milestone-scoped.
 
+## malformed-declaration
+
+The approved roadmap contains a valid `## M1 — Slice`, a valid `- [M1-D1] outcome`, a heading `### Deliverables for M1`, prose that mentions `[M1-D2]`, a Markdown link `- [M1-D2](https://example.com/m1-d2)`, plus the malformed candidates `## M4` and `- [M1-D9]`.
+Expected: `### Deliverables for M1`, the prose mention, and the Markdown link are not declaration candidates and never block. `## M4` and `- [M1-D9]` are candidates that fail their allowed patterns, so the run reports them, makes no Linear mutation, and returns BLOCKED.
+
 ## prefix-collision-key
 
 The approved roadmap contains M1 and M1-D1. Linear contains only `Roadmap sync key: M10` and `Roadmap sync key: M1-D10`, plus one issue whose `Depends on:` line names M1-D1.
@@ -68,3 +73,8 @@ Expected: return BLOCKED in authority mode `origin-main`, load no approved inten
 
 A live run created tickets, but GitHub is not configured or the pull request cannot be created.
 Expected: keep the mechanical roadmap-link branch local and unmerged, never commit or push to `main`, return PARTIAL when Linear synchronization otherwise succeeded and BLOCKED when it did not, and state the exact setup action. A dry run only records the pull request a live run would open.
+
+## link-pr-intent-deletion
+
+A live run created tickets and the mechanical roadmap-link branch diff removes a deliverable bullet or other roadmap intent line, not only an in-place `Linear tickets:` replacement.
+Expected: the self-check that inspects every added, changed, and removed line fails, the branch changes are discarded, no pull request is opened, and the run returns BLOCKED even when Linear synchronization otherwise succeeded.

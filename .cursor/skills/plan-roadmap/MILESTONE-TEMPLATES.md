@@ -2,27 +2,9 @@
 
 Use every heading. Write `None` when a non-verdict section has no entries.
 
-## Stable identifiers
-
-Roadmap milestone headings use:
-
-`## M<number> — milestone name`
-
-Roadmap deliverables use:
-
-`- [M<number>-D<number>] deliverable outcome`
-
-Every synced Linear issue description contains:
-
-`Roadmap sync key: M<number>` for a milestone parent.
-
-`Roadmap sync key: M<number>-D<number>` for a deliverable.
-
-Sync keys are immutable. A renamed outcome keeps its existing key.
-
 ## Roadmap authoring forms
 
-These forms are the single contract shared by roadmap authors and every validator. Parse with the exact patterns below so no approved identifier is silently omitted.
+This section is the single canonical contract shared by roadmap authors and every validator. No other section restates these forms. Parse with the exact patterns below so no approved identifier is silently omitted and no mere mention of an identifier is mistaken for a declaration.
 
 Milestone heading, one per milestone:
 
@@ -40,11 +22,15 @@ Milestone Linear ticket references, at most one line per milestone section:
 
 `Linear tickets: TEAM-123, TEAM-124`
 
+A milestone never carries more than one `Linear tickets:` line. New identifiers are appended to the existing line in place, and a stale identifier is replaced on that same line. A second reference line is never added.
+
 Target Linear team key, exactly one line under `## Delivery Workflow` in root `AGENTS.md`:
 
 `Linear team: <team-key>`
 
 `Linear tickets:` and `Linear team:` both accept an optional Markdown bullet prefix, so `Linear team: ENG` and `- Linear team: ENG` are equally valid.
+
+Every synced Linear issue description carries `Roadmap sync key: M<number>` for a milestone parent or `Roadmap sync key: M<number>-D<number>` for a deliverable, governed by the sync-key exactness rules below.
 
 ### Required parsing patterns
 
@@ -58,13 +44,26 @@ Apply these patterns per line, anchored, with no substring shortcuts:
 - Linear issue dependency references: `^[ \t]*Depends on:[ \t]*(\S.*?)[ \t]*$`
 - Linear issue parent reference: `^[ \t]*Parent sync key:[ \t]*(\S.*?)[ \t]*$`
 
-A line that advertises an identifier but fails its pattern is BLOCKED for human correction. Never silently skip it. A `##` heading that contains `M<number>` but omits the separator or the name must block, and a bullet that contains `[M<number>-D<number>]` but omits the outcome text must block.
+### Malformed declaration detectors
+
+Only a line that claims to be a declaration may block. A heading or sentence that merely mentions an identifier is never a declaration and never blocks. Apply these detectors per line:
+
+- Milestone declaration candidate: `^[ \t]*##(?!#)[ \t]+M\d+(?![\w-])`
+- Deliverable declaration candidate: `^[ \t]*[-*+][ \t]+\[M\d+-D\d+\](?!\()`
+
+The milestone detector requires exactly two `#` characters and requires `M<number>` to be the first content token, so `### Deliverables for M1` and `## Deliverables for M1` are never candidates.
+
+The deliverable detector requires a list bullet whose first token is `[M<number>-D<number>]`, and it excludes the Markdown link form, so `See [M1-D2] for the migration detail.` and `- [M1-D2](https://example.com/m1-d2)` are never candidates.
+
+A candidate line that fails its allowed pattern above is BLOCKED for human correction and is never silently skipped. `## M4` blocks because it omits the separator and the milestone name. `- [M1-D9]` blocks because it omits the outcome text. A line that is not a candidate is neither parsed as an identifier nor blocked.
 
 Duplicate approved milestone identifiers and duplicate approved deliverable identifiers are BLOCKED on every run, including a run scoped to a single milestone.
 
 ## Sync-key exactness
 
 `Roadmap sync key:` occupies its own line, appears exactly once per Linear issue description, and carries one key matching `^M\d+$` or `^M\d+-D\d+$`.
+
+Sync keys are immutable. A renamed outcome keeps its existing key.
 
 Parse the key as the trimmed remainder of that line, then compare keys only by full-value equality of parsed keys. Never compare by substring, prefix, suffix, or containment. `M1` never matches `M10`, `M1-D1` never matches `M1-D10`, and `M1` never matches `M1-D1`.
 
