@@ -212,6 +212,12 @@ Create `.cursor/skills/agent-delivery/ROLE-CONTRACTS.md`:
 
 Do not create `backend-developer`, `reviewer-a`, or `reviewer-b`.
 
+## `/agent-delivery`
+
+May: preflight; dispatch roles per ownership table; write Linear status notes; set ticket to `Blocked — Human` when repair cycles are exhausted (or report that state when Linear mutation is unavailable); maintain run records.
+
+May not: move tickets to `Agent Ready`; delete/cancel/close/downgrade tickets; mutate `Agent Ready` or other active/terminal tickets' scope; invent verification or delivery success; merge; edit steering.
+
 ## Planner
 
 May: read steering/ADRs/roadmap/Linear; propose Linear decomposition; create/refine Draft or Needs Planning children through the parent workflow.
@@ -511,11 +517,18 @@ Fail closed and state the human action when:
 - steering contradicts;
 - verification entrypoint is missing from `AGENTS.md`;
 - required Superpowers skills are unavailable;
+- required pinned model is unavailable (CTO `gpt-5.6-sol`);
 - workspace is unsafe and isolation cannot be established;
 - review or CTO blocks;
 - repair cycles are exhausted (max 2).
 
 Never merge. Never edit steering to unblock a ticket. Never invent verification success.
+
+## Linear writes (live only)
+
+Permitted: write Linear status notes; set ticket to `Blocked — Human` when repair cycles are exhausted (or report that state when Linear mutation is unavailable).
+
+Forbidden: move to `Agent Ready`; delete/cancel/close/downgrade tickets; mutate `Agent Ready` or other active/terminal tickets' scope; invent success.
 
 ## Preflight
 
@@ -526,8 +539,9 @@ Never merge. Never edit steering to unblock a ticket. Never invent verification 
 5. Classify ticket as `frontend`, `backend`, or `integration`.
 6. Confirm verification entrypoint exists in `AGENTS.md`.
 7. Confirm Superpowers skills are available: `subagent-driven-development`, `requesting-code-review`, `finishing-a-development-branch`, and `using-git-worktrees` / `writing-plans` when needed.
-8. Identify `dev` base SHA.
-9. Create or resume `.agent-delivery/runs/<ticket-id>/run.md`.
+8. Confirm required pinned models are available (CTO: `gpt-5.6-sol`); record resolved role-model configuration in `run.md`.
+9. Identify `dev` base SHA.
+10. Create or resume `.agent-delivery/runs/<ticket-id>/run.md`.
 
 ## Needs Planning
 
@@ -546,9 +560,9 @@ Never merge. Never edit steering to unblock a ticket. Never invent verification 
 6. Record verification evidence for the exact head SHA in `verification.md`.
 7. Invoke Superpowers `requesting-code-review`; store output in `code-review.md`.
 8. Launch fresh `cto` with the CTO Report template; store in `cto-review.md`.
-9. On any blocking verification, review, or CTO verdict, run the repair loop (same implementer path as the ticket). Each new SHA invalidates prior evidence. After two unsuccessful repairs, report `Blocked — Human` and stop.
+9. On any blocking verification, review, or CTO verdict, run the repair loop (same implementer path as the ticket). Each new SHA invalidates prior evidence. After two unsuccessful repairs, set or report `Blocked — Human` and stop.
 10. When gates pass, invoke Superpowers `finishing-a-development-branch` for PR options toward `dev`, write the Merge Readiness Report, and leave merge to a human.
-11. Update Linear status notes only as allowed; never move a ticket to Agent Ready from this skill.
+11. Write Linear status notes per permitted writes above.
 ```
 
 - [ ] **Step 2: Validate skill metadata and Superpowers handoffs**

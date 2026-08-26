@@ -17,7 +17,7 @@
 
 ## Commands
 
-Python package manager is **uv** ([ADR-0007](docs/adr/0007-python-package-manager-uv.md)). No verified install/lint/test commands yet (no app manifests). Prefer `docs/TECH.md` once scaffolds land (`uv sync` / `uv run` planned). Planned local entrypoint: `docker compose up`.
+Python package manager is **uv** ([ADR-0007](docs/adr/0007-python-package-manager-uv.md)). No verified install/lint/test commands yet (no app manifests). Prefer `docs/TECH.md` once scaffolds land (`uv sync` / `uv run` planned). Planned local entrypoint: `docker compose up`. `/agent-delivery` blocks until a verified verification entrypoint is documented here; do not invent success.
 
 ## Agent Workflow
 

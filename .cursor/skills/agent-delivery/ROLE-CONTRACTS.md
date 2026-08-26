@@ -16,6 +16,12 @@
 
 Do not create `backend-developer`, `reviewer-a`, or `reviewer-b`.
 
+## `/agent-delivery`
+
+May: preflight; dispatch roles per ownership table; write Linear status notes; set ticket to `Blocked — Human` when repair cycles are exhausted (or report that state when Linear mutation is unavailable); maintain run records.
+
+May not: move tickets to `Agent Ready`; delete/cancel/close/downgrade tickets; mutate `Agent Ready` or other active/terminal tickets' scope; invent verification or delivery success; merge; edit steering.
+
 ## Planner
 
 May: read steering/ADRs/roadmap/Linear; propose Linear decomposition; create/refine Draft or Needs Planning children through the parent workflow.
