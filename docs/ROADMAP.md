@@ -10,46 +10,62 @@ Milestone order matches the MVP design (`docs/superpowers/specs/2026-08-25-dbt-c
 
 ## M1 — Steering and design lock
 
-- [M1-D1] Durable steering on main (`PRODUCT`, `TECH`, `STRUCTURE`, `DESIGN`, `ROADMAP`, `AGENTS`, ADRs)
-- [M1-D2] Approved MVP design retained as implementation authority
-- [M1-D3] Implementation plan for the first vertical slice
+Linear project: [M1 — Steering and design lock](https://linear.app/medaiec/project/m1-steering-and-design-lock-bfcacfd44b3e)
+
+- [DCP-10](https://linear.app/medaiec/issue/DCP-10) Durable steering on main (`PRODUCT`, `TECH`, `STRUCTURE`, `DESIGN`, `ROADMAP`, `AGENTS`, ADRs)
+- [DCP-11](https://linear.app/medaiec/issue/DCP-11) Approved MVP design retained as implementation authority
+- [DCP-12](https://linear.app/medaiec/issue/DCP-12) Implementation plan for the first vertical slice
 
 ## M2 — Domain and API foundation
 
-- [M2-D1] Domain model and Postgres migrations for projects, environments, and jobs
-- [M2-D2] API CRUD for projects, environments, and jobs
+Linear project: [M2 — Domain and API foundation](https://linear.app/medaiec/project/m2-domain-and-api-foundation-a60276847e39)
+
+- [DCP-13](https://linear.app/medaiec/issue/DCP-13) Domain model and Postgres migrations for projects, environments, and jobs
+- [DCP-14](https://linear.app/medaiec/issue/DCP-14) API CRUD for projects, environments, and jobs
 
 ## M3 — First vertical slice (LocalDocker)
 
-- [M3-D1] Docker Compose stack including the required local dbt runner image
-- [M3-D2] LocalDockerRunner plus one platform workflow for a manual run through artifacts and lineage
-- [M3-D3] Getting started UI plus project, job, and run detail for the slice
-- [M3-D4] Run logs, artifact index, and basic lineage visible in the UI
+Linear project: [M3 — First vertical slice (LocalDocker)](https://linear.app/medaiec/project/m3-first-vertical-slice-localdocker-f461faa69643)
+
+- [DCP-16](https://linear.app/medaiec/issue/DCP-16) Docker Compose stack including the required local dbt runner image
+- [DCP-15](https://linear.app/medaiec/issue/DCP-15) LocalDockerRunner plus one platform workflow for a manual run through artifacts and lineage
+- [DCP-17](https://linear.app/medaiec/issue/DCP-17) Getting started UI plus project, job, and run detail for the slice
+- [DCP-19](https://linear.app/medaiec/issue/DCP-19) Run logs, artifact index, and basic lineage visible in the UI
 
 ## M4 — Schedules
 
-- [M4-D1] Job schedules via DBOS with cron-driven runs
+Linear project: [M4 — Schedules](https://linear.app/medaiec/project/m4-schedules-bfd7b46d7f25)
+
+- [DCP-18](https://linear.app/medaiec/issue/DCP-18) Job schedules via DBOS with cron-driven runs
 
 ## M5 — AWS Batch runner
 
-- [M5-D1] AWSBatchRunner adapter behind the shared runner contract (Compose still boots without AWS)
+Linear project: [M5 — AWS Batch runner](https://linear.app/medaiec/project/m5-aws-batch-runner-91034041b9bb)
+
+- [DCP-20](https://linear.app/medaiec/issue/DCP-20) AWSBatchRunner adapter behind the shared runner contract (Compose still boots without AWS)
 
 ## M6 — Elementary observability
 
-- [M6-D1] Required Elementary step and split `observability_status` on runs
+Linear project: [M6 — Elementary observability](https://linear.app/medaiec/project/m6-elementary-observability-af3edc7179c4)
+
+- [DCP-21](https://linear.app/medaiec/issue/DCP-21) Required Elementary step and split `observability_status` on runs
 
 ## M7 — Packaging and adopter docs
 
-- [M7-D1] Compose packaging polish and OSS adopter documentation
+Linear project: [M7 — Packaging and adopter docs](https://linear.app/medaiec/project/m7-packaging-and-adopter-docs-c8ddd62ef696)
+
+- [DCP-22](https://linear.app/medaiec/issue/DCP-22) Compose packaging polish and OSS adopter documentation
 
 ## M8 — Later productization
 
-- [M8-D1] OIDC and RBAC
-- [M8-D2] Helm / Kubernetes packaging
-- [M8-D3] Temporal backend only if DBOS hits a proven limitation
-- [M8-D4] Multi-tenancy / multi-team productization
-- [M8-D5] Stronger design system and accessibility bar
-- [M8-D6] Delivery-platform automation beyond local agent-delivery skills
+Linear project: [M8 — Later productization](https://linear.app/medaiec/project/m8-later-productization-83914ea755cf)
+
+- [DCP-24](https://linear.app/medaiec/issue/DCP-24) OIDC and RBAC
+- [DCP-25](https://linear.app/medaiec/issue/DCP-25) Helm / Kubernetes packaging
+- [DCP-23](https://linear.app/medaiec/issue/DCP-23) Temporal backend only if DBOS hits a proven limitation
+- [DCP-27](https://linear.app/medaiec/issue/DCP-27) Multi-tenancy / multi-team productization
+- [DCP-26](https://linear.app/medaiec/issue/DCP-26) Stronger design system and accessibility bar
+- [DCP-28](https://linear.app/medaiec/issue/DCP-28) Delivery-platform automation beyond local agent-delivery skills
 
 ## Non-Goals
 

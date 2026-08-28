@@ -7,17 +7,17 @@ The second-level headings in this file are the complete set of valid scenario na
 ## empty-milestone
 
 Approved roadmap contains M1 with deliverables M1-D1 and M1-D2. Linear contains no matching sync keys.
-Expected: create one milestone parent and two child tickets in Draft or Needs Planning.
+Expected: create one Linear **project** for M1 and two deliverable issues in Draft or Needs Planning assigned to that project.
 
 ## idempotent-rerun
 
-Approved roadmap and matching draft Linear tickets have identical sync keys and content.
+Approved roadmap and matching Linear project plus draft issues have identical sync keys and content.
 Expected: create nothing, refine nothing, return SYNCED.
 
 ## refine-draft
 
 M1-D1 exists in Needs Planning, but its acceptance criteria omit a roadmap-required behavior.
-Expected: refine M1-D1 without changing its sync key or state.
+Expected: refine M1-D1 without changing its sync key, project assignment, or state.
 
 ## active-ticket-conflict
 
@@ -36,13 +36,13 @@ Expected: block before Planner launch and before any Linear mutation, report bot
 
 ## malformed-declaration
 
-The approved roadmap contains a valid `## M1 — Slice`, a valid `- [M1-D1] outcome`, a heading `### Deliverables for M1`, prose that mentions `[M1-D2]`, a Markdown link `- [M1-D2](https://example.com/m1-d2)`, plus the malformed candidates `## M4` and `- [M1-D9]`.
-Expected: `### Deliverables for M1`, the prose mention, and the Markdown link are not declaration candidates and never block. `## M4` and `- [M1-D9]` are candidates that fail their allowed patterns, so the run reports them, makes no Linear mutation, and returns BLOCKED.
+The approved roadmap contains a valid `## M1 — Slice`, a valid bootstrap `- [M1-D1] outcome`, a valid linked `- [TEAM-1](https://linear.app/example/issue/TEAM-1) outcome`, a heading `### Deliverables for M1`, prose that mentions `[M1-D2]`, plus the malformed candidates `## M4`, `- [M1-D9]`, and `- [TEAM-2]`.
+Expected: `### Deliverables for M1` and the prose mention are not declaration candidates and never block. `## M4`, `- [M1-D9]`, and `- [TEAM-2]` are candidates that fail their allowed patterns, so the run reports them, makes no Linear mutation, and returns BLOCKED.
 
 ## prefix-collision-key
 
-The approved roadmap contains M1 and M1-D1. Linear contains only `Roadmap sync key: M10` and `Roadmap sync key: M1-D10`, plus one issue whose `Depends on:` line names M1-D1.
-Expected: substring search results are filtered by exact parsed-key equality, so M10 never satisfies M1, M1-D10 never satisfies M1-D1, and a `Depends on:` reference is never read as an issue's own sync key. Both M1 and M1-D1 classify CREATE, and the required pre-create recheck applies the same exact filter.
+The approved roadmap contains M1 and M1-D1. Linear contains only `Roadmap sync key: M10` (on a project) and `Roadmap sync key: M1-D10` (on an issue), plus one issue whose `Depends on:` line names M1-D1.
+Expected: substring search results are filtered by exact parsed-key equality, so M10 never satisfies M1, M1-D10 never satisfies M1-D1, and a `Depends on:` reference is never read as an issue's own sync key. Both M1 (project) and M1-D1 (issue) classify CREATE, and the required pre-create recheck applies the same exact filter.
 
 ## missing-roadmap-id
 
@@ -51,8 +51,8 @@ Expected: make no Linear mutations and return BLOCKED.
 
 ## milestone-dependency
 
-M2 depends on completion evidence from M1. The matching M1 and M2 milestone tickets are both in Needs Planning.
-Expected: when the recorded exact current Linear schema proves the relation operation mutates no protected issue, create the dependency edge; otherwise return BLOCKED and create no edge. Never mark either milestone Agent Ready.
+M2 depends on completion evidence from M1. Deliverable issues under both projects are in Needs Planning.
+Expected: when the recorded exact current Linear schema proves the relation operation mutates no protected issue, create the dependency edge between deliverable issues; otherwise return BLOCKED and create no edge. Never mark either issue Agent Ready. Never model the milestone itself as an issue dependency.
 
 ## stale-draft
 
@@ -61,8 +61,8 @@ Expected: report the stale draft even though it belongs to an unselected milesto
 
 ## complete-milestone
 
-Approved roadmap M1 carries `Linear tickets: TEAM-11, TEAM-12`, and both referenced tickets are in a completed state. M2 carries no reference line.
-Expected: derive M1 as COMPLETE and generate no fresh drafts for it, derive M2 as ACTIVE and plan it. A canceled, unresolvable, or contradicting reference instead derives NEEDS_HUMAN_RECONCILIATION, generates no fresh drafts, and states the exact human action.
+Approved roadmap M1 carries `Linear project: [M1 — Slice](https://linear.app/example/project/m1)` and linked deliverable bullets for TEAM-12 and TEAM-13, and every deliverable issue is in a completed state. M2 carries no project line and uses bootstrap `[M2-D1]` bullets only.
+Expected: derive M1 as COMPLETE and generate no fresh drafts for it, derive M2 as ACTIVE and plan it (create project + tickets). A canceled, unresolvable, or contradicting reference instead derives NEEDS_HUMAN_RECONCILIATION, generates no fresh drafts, and states the exact human action.
 
 ## authority-divergence
 
@@ -71,10 +71,25 @@ Expected: return BLOCKED in authority mode `origin-main`, load no approved inten
 
 ## link-pr-unavailable
 
-A live run created tickets, but GitHub is not configured or the pull request cannot be created.
+A live run created projects or tickets, but GitHub is not configured or the pull request cannot be created.
 Expected: keep the mechanical roadmap-link branch local and unmerged, never commit or push to `main`, return PARTIAL when Linear synchronization otherwise succeeded and BLOCKED when it did not, and state the exact setup action. A dry run only records the pull request a live run would open.
 
 ## link-pr-intent-deletion
 
-A live run created tickets and the mechanical roadmap-link branch diff removes a deliverable bullet or other roadmap intent line, not only an in-place `Linear tickets:` replacement.
+A live run created tickets and the mechanical roadmap-link branch diff removes a deliverable bullet, rewrites deliverable outcome text, or changes anything other than permitted link prefixes and `Linear project:` lines.
 Expected: the self-check that inspects every added, changed, and removed line fails, the branch changes are discarded, no pull request is opened, and the run returns BLOCKED even when Linear synchronization otherwise succeeded.
+
+## linked-deliverable-resolution
+
+Approved roadmap M1 contains linked deliverable `- [TEAM-12](https://linear.app/example/issue/TEAM-12) outcome text`. Linear issue TEAM-12 carries `Roadmap sync key: M1-D1`.
+Expected: resolve the deliverable sync key to M1-D1 from Linear before planning; treat M1-D1 as covered when TEAM-12 matches approved content; never treat TEAM-12 as the sync key itself.
+
+## unresolved-linked-deliverable
+
+Approved roadmap M1 contains linked deliverable `- [TEAM-99](https://linear.app/example/issue/TEAM-99) outcome text`, but TEAM-99 does not exist or carries no deliverable sync key.
+Expected: return BLOCKED before Planner launch and before any Linear mutation; report the unresolved identifier and milestone.
+
+## legacy-milestone-parent-migration
+
+Approved roadmap M1 already has deliverable issues. Linear still has a parent epic issue with `Roadmap sync key: M1`, and no Linear project yet carries that key.
+Expected: create the M1 project, assign deliverables to it, then cancel the legacy epic only after assignment succeeds; never create a new milestone parent issue; write `Linear project:` (not `Linear ticket:`) on the roadmap-link branch.
