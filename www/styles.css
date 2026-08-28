@@ -35,20 +35,6 @@
   --mono: "Geist Mono", ui-monospace, monospace;
 }
 
-@media (prefers-color-scheme: light) {
-  :root {
-    color-scheme: light;
-    --bg: #ece8df;
-    --bg-elev: #f6f2ea;
-    --fg: #12100e;
-    --muted: #5c574f;
-    --line: #c9c2b6;
-    --accent: #c45c16;
-    --accent-ink: #ece8df;
-    --focus: #12100e;
-  }
-}
-
 *,
 *::before,
 *::after {
@@ -177,6 +163,12 @@ header {
   isolation: isolate;
 }
 
+.hero picture {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+}
+
 .hero-photo {
   position: absolute;
   inset: 0;
@@ -261,8 +253,8 @@ header {
 .run {
   width: min(100%, 72rem);
   margin-inline: auto;
-  padding: 3.25rem max(var(--gutter), env(safe-area-inset-left)) 0
-    max(var(--gutter), env(safe-area-inset-right));
+  padding: 3.25rem max(var(--gutter), env(safe-area-inset-right)) 0
+    max(var(--gutter), env(safe-area-inset-left));
 }
 
 section + section {

@@ -8,8 +8,7 @@
       name="description"
       content="Open-source, self-hostable control plane for dbt Core with Elementary. Run jobs on Docker Compose."
     />
-    <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)" />
-    <meta name="theme-color" content="#ece8df" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#000000" />
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
@@ -21,13 +20,17 @@
     </header>
     <main id="main">
       <section class="hero">
-        <img
-          class="hero-photo"
-          src="img/hero-horizon.png"
-          width="1920"
-          height="1080"
-          alt="Night horizon with a thin atmospheric glow"
-        />
+        <picture>
+          <source type="image/webp" srcset="img/hero-horizon.webp" />
+          <img
+            class="hero-photo"
+            src="img/hero-horizon.jpg"
+            width="1536"
+            height="1024"
+            alt="Night horizon with a thin atmospheric glow"
+            fetchpriority="high"
+          />
+        </picture>
         <div class="hero-copy">
           <h1>Open-source control plane for dbt Core</h1>
           <p class="lede">
