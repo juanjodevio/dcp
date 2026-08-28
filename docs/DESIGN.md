@@ -38,11 +38,11 @@ Product surfaces are defined in `docs/PRODUCT.md` and `docs/superpowers/specs/20
 
 ### Frontend agent skills
 
-Two packs. Do not install the full [taste-skill](https://github.com/Leonxlnx/taste-skill) repo (it pulls imagegen, brutalist, brandkit, and other variants). Pin `--skill` names. [awesome-design-md](https://github.com/voltagent/awesome-design-md) is a reference library, not an installable skill, and must not overwrite this file.
+One implementer: project `frontend-developer` for operator UI **and** marketing landing. Two skill packs. Do not install the full [taste-skill](https://github.com/Leonxlnx/taste-skill) repo (it pulls imagegen, brutalist, brandkit, and other variants). Pin `--skill` names. [awesome-design-md](https://github.com/voltagent/awesome-design-md) is a reference library, not an installable skill, and must not overwrite this file.
 
 #### Marketing landing (pre-product)
 
-Use when building `www/`. taste-skill v2 is for landings, not dashboards. Spec: `docs/superpowers/specs/2026-08-28-marketing-landing-design.md`. Plan: `docs/superpowers/plans/2026-08-28-marketing-landing.md`.
+Use when `frontend-developer` is building `www/`. taste-skill v2 is for landings, not dashboards. Spec: `docs/superpowers/specs/2026-08-28-marketing-landing-design.md`. Plan: `docs/superpowers/plans/2026-08-28-marketing-landing.md`.
 
 ```bash
 npx skills add https://github.com/Leonxlnx/taste-skill --skill design-taste-frontend
@@ -69,7 +69,7 @@ npx impeccable install
 # then in Cursor: /impeccable init
 ```
 
-`frontend-developer` implements control-plane screens only. Landing work does not use that packet.
+`frontend-developer` implements both surfaces. Load the landing pack for `www/` and the operator pack for `control-plane/ui/`. Do not apply `design-taste-frontend` to operator screens.
 
 ### Accessibility
 

@@ -21,7 +21,7 @@ This is not Getting started, not the Next.js operator UI, and not M7 adopter doc
 | CTA | Primary link: `https://github.com/juanjodevio/dcp` |
 | Honesty | Product is in development; do not imply a running hosted app or Compose stack that does not exist yet |
 | Visual | Landing may have its own language via `design-taste-frontend`. Do not copy tokens into `control-plane/ui/` |
-| Implementer | Landing skill pack in `docs/DESIGN.md`. Do **not** dispatch `frontend-developer` |
+| Implementer | Project `frontend-developer`, loading the landing skill pack in `docs/DESIGN.md` |
 
 ## Audience and job
 
@@ -75,4 +75,4 @@ Open locally with a static server (for example `python3 -m http.server -d www 41
 
 Linear deliverable **[DCP-29](https://linear.app/medaiec/issue/DCP-29)** (`M1-D4`) under M1. Depends on M1-D1 (steering copy). Does not block M1-D3 or M2.
 
-Prefer a manual implementer session with the landing skill pack. If `/agent-delivery` is used, do not fill the implementer from `.cursor/agents/frontend-developer.md`.
+`/agent-delivery` classifies this as frontend and fills the implementer from `.cursor/agents/frontend-developer.md`. That agent must load the landing skill pack for `www/`, not the operator UI pack.

@@ -164,9 +164,9 @@ Only a line that claims to be a declaration can block parsing. A heading such as
 
 Do not create project `backend-developer`, `reviewer-a`, or `reviewer-b` agents.
 
-`frontend-developer.md` inherits the parent model and is the specialized implementer packet for UI tickets. It must require `docs/DESIGN.md` and relevant product screens before edits, apply the project's UI composition rules, and must not invent a brand system while `DESIGN.md` still defers one. It does not overwrite Superpowers plugin files; `/agent-delivery` selects it when filling the SDD implementer dispatch `## Context` / prompt body for frontend work.
+`frontend-developer.md` inherits the parent model and is the specialized implementer packet for frontend tickets (operator UI and marketing landing). It must require `docs/DESIGN.md` and relevant product or landing specs before edits, apply the project's UI composition rules, and must not invent a brand system while `DESIGN.md` still defers one. It does not overwrite Superpowers plugin files; `/agent-delivery` selects it when filling the SDD implementer dispatch `## Context` / prompt body for frontend work.
 
-Before the first UI ticket, install the frontend skill pack noted in `docs/DESIGN.md` (`vercel-composition-patterns`, `web-design-guidelines`, `react-best-practices`). Defer `npx impeccable install` (+ `/impeccable init`) until that first UI ticket unless a design pass needs it earlier.
+Install the skill pack for the surface from `docs/DESIGN.md`: landing pack for `www/`, operator pack (`vercel-composition-patterns`, `web-design-guidelines`, `react-best-practices`) before the first product UI ticket (DCP-17). Defer `npx impeccable install` (+ `/impeccable init`) until that first operator UI ticket unless a design pass needs it earlier.
 
 `planner.md` and `cto.md` are read-only. The CTO pins GPT-5.6 Sol. Planner inherits the selected parent model.
 
@@ -279,7 +279,7 @@ The implementer works one approved work item, runs local checks, commits, and re
 
 Verification follows the plan and Superpowers SDD / verification practices against the exact feature-branch SHA.
 
-The repository's versioned verification entrypoint should eventually cover formatting, linting, static types, unit tests, and relevant integration tests. Until the product repository defines that entrypoint, delivery must stop rather than inventing an unverifiable success claim.
+`/agent-delivery` invokes the verification command documented in `AGENTS.md` (owning list: `docs/TECH.md`). Until that command is listed there, delivery must stop rather than inventing an unverifiable success claim. The entrypoint should eventually cover formatting, linting, static types, unit tests, and relevant integration tests.
 
 Verification evidence records:
 

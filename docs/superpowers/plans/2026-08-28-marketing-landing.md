@@ -4,7 +4,7 @@
 
 **Goal:** Ship a static public landing at `www/` that explains dcp and links to GitHub before any control-plane application code exists.
 
-**Architecture:** One HTML page and one stylesheet at repo root `www/`. No Next.js, no npm, no Compose. Copy is locked by unittest against `www/index.html`. Visual treatment uses the landing skill pack (`design-taste-frontend` + `web-design-guidelines`), not `.cursor/agents/frontend-developer.md`.
+**Architecture:** One HTML page and one stylesheet at repo root `www/`. No Next.js, no npm, no Compose. Copy is locked by unittest against `www/index.html`. Implementer is project `frontend-developer` using the landing skill pack (`design-taste-frontend` + `web-design-guidelines`), not the operator UI pack.
 
 **Tech Stack:** HTML5, CSS, Python 3 stdlib `unittest` and `http.server`.
 

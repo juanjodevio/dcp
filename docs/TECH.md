@@ -4,7 +4,7 @@ Last Reviewed: 2026-08-28
 
 ## Technical Summary
 
-Modular monolith: FastAPI API and DBOS worker in one process for v0.1, PostgreSQL for product state, S3-compatible object storage for artifacts, Next.js **operator** UI, dbt executed only via OCI runners. Target packaging is Docker Compose (local dbt runner image required). Application source tree is **planned**; commands below are unverified until scaffolds exist. The public marketing landing is static HTML under `www/` and is not part of the Next.js app.
+Modular monolith: FastAPI API and DBOS worker in one process for v0.1, PostgreSQL for product state, S3-compatible object storage for artifacts, Next.js **operator** UI, dbt executed only via OCI runners. Target packaging is Docker Compose (local dbt runner image required). Application source tree is **planned**; app install/lint/compose commands below are unverified until scaffolds exist. The public marketing landing is static HTML under `www/` and is not part of the Next.js app. The `/agent-delivery` verification entrypoint is documented in Commands.
 
 Source design: `docs/superpowers/specs/2026-08-25-dbt-control-plane-mvp-design.md`.
 
@@ -27,15 +27,28 @@ Evidence: Python choice is human-confirmed (2026-08-25). Lockfiles not in tree y
 
 ## Commands
 
-All unverified until implementation scaffolds land. Expected shape:
+`/agent-delivery` verification entrypoint (also listed in `AGENTS.md`):
+
+```bash
+python3 -m unittest tests/www/test_landing_copy.py
+```
+
+This is the current repo entrypoint (landing copy contract; stdlib `unittest`, no `uv` yet). Record pass/fail against the feature SHA. Do not claim success if the command is missing, errors, or exits non-zero. It is expected to fail until DCP-29 adds `tests/www/test_landing_copy.py` and `www/`.
+
+Marketing landing preview (not the verification entrypoint):
+
+```bash
+python3 -m http.server -d www 4173
+```
+
+Other commands remain planned until application scaffolds land:
 
 - Install (Python): `uv sync` (planned; unverified)
 - Lint / typecheck / test / build: TBD via `uv run ...` and stable scripts for agent-delivery and CI
 - Local stack: `docker compose up` (planned)
-- Marketing landing preview: `python3 -m http.server -d www 4173` (planned; unverified until `www/` exists)
 - Validate: compose health + API health endpoint (planned)
 
-When commands are added, update this section with exact invocations and mark them verified after first successful run.
+When app commands are added, update this section with exact invocations and mark them verified after first successful run.
 
 ## Dependencies
 
