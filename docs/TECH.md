@@ -1,17 +1,18 @@
 # Tech
 
-Last Reviewed: 2026-08-25
+Last Reviewed: 2026-08-28
 
 ## Technical Summary
 
-Modular monolith: FastAPI API and DBOS worker in one process for v0.1, PostgreSQL for product state, S3-compatible object storage for artifacts, Next.js UI, dbt executed only via OCI runners. Target packaging is Docker Compose (local dbt runner image required). Application source tree is **planned**; commands below are unverified until scaffolds exist.
+Modular monolith: FastAPI API and DBOS worker in one process for v0.1, PostgreSQL for product state, S3-compatible object storage for artifacts, Next.js **operator** UI, dbt executed only via OCI runners. Target packaging is Docker Compose (local dbt runner image required). Application source tree is **planned**; commands below are unverified until scaffolds exist. The public marketing landing is static HTML under `www/` and is not part of the Next.js app.
 
 Source design: `docs/superpowers/specs/2026-08-25-dbt-control-plane-mvp-design.md`.
 
 ## Stack And Runtimes
 
 - Language/runtime: Python (API, orchestration, integrations); Node.js/TypeScript (UI)
-- Frameworks: FastAPI; SQLAlchemy 2 + Alembic; DBOS; Next.js
+- Frameworks: FastAPI; SQLAlchemy 2 + Alembic; DBOS; Next.js (operator UI only)
+- Marketing landing: static HTML + CSS in `www/` (no Node toolchain)
 - Database/storage: PostgreSQL (product + DBOS durable state); MinIO/S3-compatible artifact store
 - Deployment target: Docker Compose first; Helm deferred
 - Execution: required local dbt runner image; optional AWS Batch as an execution target when configured
@@ -31,6 +32,7 @@ All unverified until implementation scaffolds land. Expected shape:
 - Install (Python): `uv sync` (planned; unverified)
 - Lint / typecheck / test / build: TBD via `uv run ...` and stable scripts for agent-delivery and CI
 - Local stack: `docker compose up` (planned)
+- Marketing landing preview: `python3 -m http.server -d www 4173` (planned; unverified until `www/` exists)
 - Validate: compose health + API health endpoint (planned)
 
 When commands are added, update this section with exact invocations and mark them verified after first successful run.
@@ -42,7 +44,8 @@ Planned core dependencies (not installed yet):
 - FastAPI / Uvicorn: HTTP API
 - SQLAlchemy 2 + Alembic: ORM and migrations
 - DBOS: durable workflows and scheduling
-- Next.js: UI
+- Next.js: operator UI
+- Static landing: `www/index.html` (no framework)
 - OpenTelemetry SDK: traces/metrics
 - AWS SDK (Batch adapter only): behind runner adapter; not a core domain import
 - dbt: runs inside the runner image, not embedded in the API process

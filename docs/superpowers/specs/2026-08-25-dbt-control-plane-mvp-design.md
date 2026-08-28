@@ -3,7 +3,7 @@
 **Date:** 2026-08-25  
 **Status:** Ready for review  
 **Approach:** Modular monolith (Approach A)  
-**Related:** `docs/session-handoff.md`, agent-delivery workflow on GitHub
+**Related:** `docs/session-handoff.md`, agent-delivery workflow on GitHub, marketing landing spec `docs/superpowers/specs/2026-08-28-marketing-landing-design.md`
 
 ## Purpose
 
@@ -27,7 +27,8 @@ This document defines the v0.1 MVP boundary, domain model, workflows, interfaces
 | Metadata | Normalize core lineage into Postgres; keep raw artifacts in object storage |
 | Packaging | Docker Compose first; Helm deferred |
 | Forge / delivery | GitHub (existing agent-delivery spec) |
-| Empty UI | Getting started screen when no projects exist |
+| Empty UI | Getting started screen when there are no projects |
+| Marketing landing | Static `www/` page; not a control-plane screen |
 
 ## Product boundary
 
@@ -42,6 +43,10 @@ SQL compilation/execution and its internal model DAG. The control plane invokes 
 ### Elementary owns
 
 Its own observability/data-quality semantics. The control plane integrates and surfaces reports; Elementary is not the canonical metadata store.
+
+### Marketing landing (not this UI)
+
+Public discovery is a static page at `www/`, specified separately. The control plane does not serve it. Do not implement the landing inside `control-plane/ui/`.
 
 ### Architectural principles
 
@@ -81,6 +86,7 @@ Its own observability/data-quality semantics. The control plane integrates and s
 - Replacing Elementary’s own UI
 - Embedding dbt in the API process
 - Treating prompts as security boundaries (delivery concerns stay in agent-delivery docs)
+- Implementing the marketing landing inside `control-plane/ui/`
 
 ## Architecture: modular monolith
 
