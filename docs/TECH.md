@@ -101,6 +101,14 @@ Present tooling (CI / verification):
 - Auth middleware is out of scope for v0.1; document private-network / localhost assumption
 - Required CI check names are a contract: renaming `python` or `typescript` requires a simultaneous ruleset update
 
+## Repository gates
+
+- Feature PRs target `dev`. After CI is green, a human enables auto-merge (squash): `gh pr merge --auto --squash` or the PR UI.
+- `/agent-delivery` must not enable auto-merge.
+- Milestone releases: human merges `dev` → `main`.
+- AI PR review (CodeRabbit) is deferred.
+- Rulesets on `dev` and `main` require status checks named exactly `python` and `typescript`, require a PR (no direct push), and do not require approving reviews on `dev`.
+
 ## Assumptions
 
 - DBOS remains sufficient for coarse platform workflows in v0.1 (accepted product decision; Temporal only if proven limitation)
