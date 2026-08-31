@@ -36,9 +36,9 @@ May not: merge; approve; expand scope; edit steering.
 
 ## Frontend developer
 
-May: implement one approved frontend ticket via SDD using this packet; edit UI code; run checks; commit.
+May: implement one approved frontend ticket via SDD using this packet (operator UI or marketing landing); edit UI/`www/` code; run checks; commit.
 
-May not: merge; approve; expand scope; edit steering; invent a deferred brand system.
+May not: merge; approve; expand scope; edit steering; invent a deferred brand system; apply landing visual tokens to the operator UI unless DESIGN.md promotes them.
 
 ## Code reviewer (Superpowers)
 

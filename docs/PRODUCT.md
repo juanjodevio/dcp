@@ -1,6 +1,6 @@
 # Product
 
-Last Reviewed: 2026-08-25
+Last Reviewed: 2026-08-28
 
 ## Product Summary
 
@@ -19,6 +19,7 @@ Teams that want Cloud-like job/run UX around dbt Core often face either commerci
 
 ## Core Workflows
 
+- Discover dcp: public marketing landing (`www/`) explains the product and points at GitHub before the control plane exists.
 - Getting started (no projects): guided create project → environment → job.
 - Configure environment: warehouse target + runner preference (`local_docker` or `aws_batch`).
 - Define and trigger jobs: manual dbt invocation; view status, logs, artifacts.
@@ -36,6 +37,7 @@ In scope (v0.1 product surface):
 - Required Elementary integration
 - Docker Compose packaging including a required local dbt runner image
 - Getting started empty state when no projects exist
+- Public marketing landing (`www/`), separate from the operator UI
 
 Out of scope (v0.1):
 
@@ -45,9 +47,11 @@ Out of scope (v0.1):
 - Helm / Kubernetes as the primary packaging target
 - Replacing Elementary’s own UI
 - Embedding dbt inside the API process
+- Serving the marketing landing from the Compose operator UI
 
 ## Success Criteria
 
+- A new visitor can understand dcp from the marketing landing and reach the GitHub repository without a running app.
 - An adopter can `docker compose up`, complete Getting started, and complete a manual LocalDocker dbt run with logs, artifacts, and basic lineage visible in the UI.
 - Schedules, AWS Batch execution, and Elementary reports work for the same domain model without rewriting core entities.
 - Product state lives in PostgreSQL; orchestration and cloud services remain behind adapters.
