@@ -1,6 +1,6 @@
 # Roadmap
 
-Last Reviewed: 2026-08-28
+Last Reviewed: 2026-08-31
 
 ## Roadmap Summary
 
@@ -16,6 +16,7 @@ Linear project: [M1 — Steering and design lock](https://linear.app/medaiec/pro
 - [DCP-11](https://linear.app/medaiec/issue/DCP-11) Approved MVP design retained as implementation authority
 - [DCP-12](https://linear.app/medaiec/issue/DCP-12) Implementation plan for the first vertical slice
 - [DCP-29](https://linear.app/medaiec/issue/DCP-29) Public marketing landing at `www/` (static HTML; does not block M2)
+- [DCP-30](https://linear.app/medaiec/issue/DCP-30) Repo CI + automerge setup (uv/pnpm toolchains, Actions checks `python`+`typescript`, rulesets; human arms feature→`dev` auto-merge; does not block M2)
 
 ## M2 — Domain and API foundation
 
@@ -85,7 +86,7 @@ Linear project: [M8 — Later productization](https://linear.app/medaiec/project
 
 ## Decision Points
 
-- Choose Node/UI package manager before UI lockfile lands (Python is **uv**; see ADR-0007)
+- ~~Choose Node/UI package manager before UI lockfile lands~~ **Decided:** pnpm (ADR-0008; lands with M1-D5 / [DCP-30](https://linear.app/medaiec/issue/DCP-30)). Python remains **uv** (ADR-0007)
 - Confirm Elementary execution topology during implementation planning
 - Revisit Temporal only with concrete DBOS limitation evidence
 
@@ -94,6 +95,7 @@ Linear project: [M8 — Later productization](https://linear.app/medaiec/project
 - Milestone order from the MVP design remains authoritative until this roadmap is revised
 - Agent-delivery on GitHub stays the engineering workflow for this repository
 - M1-D4 (marketing landing) does not block M2 domain work
+- M1-D5 (repo CI + automerge) does not block M2 domain work; prefer landing it before Agent Ready M2 PRs so merge gates exist
 
 ## Unknowns
 
