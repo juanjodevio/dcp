@@ -25,36 +25,36 @@ BANNED = (
 
 
 class LandingCopyTests(unittest.TestCase):
-    def test_index_exists(self):
+    def test_index_exists(self) -> None:
         self.assertTrue(INDEX.is_file(), f"missing {INDEX}")
 
-    def test_styles_exist_and_are_linked(self):
+    def test_styles_exist_and_are_linked(self) -> None:
         self.assertTrue(STYLES.is_file(), f"missing {STYLES}")
         html = INDEX.read_text(encoding="utf-8")
         self.assertIn("styles.css", html)
 
-    def test_required_copy(self):
+    def test_required_copy(self) -> None:
         html = INDEX.read_text(encoding="utf-8")
         for needle in REQUIRED:
             with self.subTest(needle=needle):
                 self.assertIn(needle, html)
 
-    def test_no_saas_cta(self):
+    def test_no_saas_cta(self) -> None:
         html = INDEX.read_text(encoding="utf-8").lower()
         for banned in BANNED:
             with self.subTest(banned=banned):
                 self.assertNotIn(banned, html)
 
-    def test_skip_link_and_main(self):
+    def test_skip_link_and_main(self) -> None:
         html = INDEX.read_text(encoding="utf-8")
         self.assertIn('href="#main"', html)
         self.assertIn('id="main"', html)
 
-    def test_primary_cta_href(self):
+    def test_primary_cta_href(self) -> None:
         html = INDEX.read_text(encoding="utf-8")
         self.assertIn(PRIMARY_CTA_HREF, html)
 
-    def test_referenced_assets_exist(self):
+    def test_referenced_assets_exist(self) -> None:
         html = INDEX.read_text(encoding="utf-8")
         css = STYLES.read_text(encoding="utf-8")
         www = ROOT / "www"
