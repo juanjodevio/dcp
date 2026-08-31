@@ -67,7 +67,7 @@ Linear project: [M8 — Later productization](https://linear.app/medaiec/project
 - [DCP-23](https://linear.app/medaiec/issue/DCP-23) Temporal backend only if DBOS hits a proven limitation
 - [DCP-27](https://linear.app/medaiec/issue/DCP-27) Multi-tenancy / multi-team productization
 - [DCP-26](https://linear.app/medaiec/issue/DCP-26) Stronger design system and accessibility bar
-- [DCP-28](https://linear.app/medaiec/issue/DCP-28) Delivery-platform automation beyond local agent-delivery skills
+- [DCP-28](https://linear.app/medaiec/issue/DCP-28) Delivery-platform automation beyond local agent-delivery skills (native CI/rulesets and human-armed feature→`dev` auto-merge are M1-D5 / DCP-30, not this ticket)
 
 ## Non-Goals
 

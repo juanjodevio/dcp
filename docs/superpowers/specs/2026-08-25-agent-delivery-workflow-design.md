@@ -2,7 +2,7 @@
 
 **Date:** 2026-08-25  
 **Status:** Approved  
-**Revised:** 2026-08-25 — thin `/agent-delivery` wraps Superpowers for backend delivery; keep a specialized frontend implementer
+**Revised:** 2026-08-31 — thin `/agent-delivery` wraps Superpowers; human-armed feature→`dev` auto-merge; CTO opens steering PRs on drift
 
 ## Purpose
 
@@ -15,7 +15,7 @@ The initial system uses two project-local Cursor skills invoked manually:
 /agent-delivery LINEAR-ID
 ```
 
-`/plan-roadmap` turns the approved roadmap into milestones and draft Linear work. `/agent-delivery` is a thin orchestrator: it owns Linear and GitHub gates, then reuses Superpowers skills for implementation, review, and branch finish. Humans approve roadmap changes, move tickets to `Agent Ready`, resolve ambiguity, and merge pull requests. Automation is added only after repeated manual runs reveal stable transitions worth automating.
+`/plan-roadmap` turns the approved roadmap into milestones and draft Linear work. `/agent-delivery` is a thin orchestrator: it owns Linear and GitHub gates, then reuses Superpowers skills for implementation, review, and branch finish. Humans approve roadmap changes, move tickets to `Agent Ready`, resolve ambiguity, arm feature→`dev` auto-merge when appropriate, and merge milestone releases to `main`. Automation is added only after repeated manual runs reveal stable transitions worth automating.
 
 ## Decisions
 
@@ -26,7 +26,8 @@ The initial system uses two project-local Cursor skills invoked manually:
 - The first version runs locally in Cursor and is started manually.
 - The workflows live in `.cursor/skills/plan-roadmap/` and `.cursor/skills/agent-delivery/` in the product repository.
 - Feature branches target `dev`. Milestone release pull requests target `main`.
-- Humans merge into both `dev` and `main` during the bootstrap phase.
+- Feature → `dev`: after a ready-for-review PR is green on required checks, a **human arms** GitHub squash auto-merge (`gh pr merge --auto --squash` or the PR UI). Agents open the PR and never enable auto-merge.
+- Milestone `dev` → `main`: human merges only; do not arm auto-merge on release PRs.
 - Backend implementation reuses Superpowers `subagent-driven-development` with its stock implementer prompt.
 - Frontend implementation reuses the same Superpowers delivery loop, but dispatches the project `frontend-developer` agent (specialized design packet) instead of the stock implementer.
 - Code review and branch completion reuse Superpowers `requesting-code-review` and `finishing-a-development-branch`.
@@ -60,8 +61,9 @@ Cursor Origin remains an option for later evaluation. The skill must avoid forge
 - Superpowers code review, plus a thin CTO scope/steering-drift gate
 - At most two repair cycles
 - Merge-readiness reporting via Superpowers finish flow plus Linear/GitHub status notes
-- Human merge into `dev`
-- Human-approved milestone pull requests from `dev` to `main`
+- Human-armed squash auto-merge for feature → `dev` (agents never arm)
+- Human-approved milestone pull requests from `dev` to `main` (no auto-merge)
+- On `STEERING_CHANGE_REQUIRED`, CTO opens a separate `steering/<linear-id>-…` PR into `dev` (does not patch the feature branch)
 
 ### Deferred
 
@@ -72,7 +74,7 @@ Cursor Origin remains an option for later evaluation. The skill must avoid forge
 - Webhook ingestion
 - Credential broker
 - Distinct GitHub App identities for every role
-- Automated merging
+- Agent-armed or fully unattended auto-merge (human arming of native GitHub auto-merge for feature→`dev` is in scope; see M1-D5 / DCP-30)
 - A generalized CI workflow language
 - A separate delivery-platform repository
 - Durable multi-ticket scheduling and concurrent orchestration
@@ -340,7 +342,7 @@ When gates pass, the skill invokes Superpowers `finishing-a-development-branch` 
 - unresolved non-blocking risks; and
 - explicit actions required from the human.
 
-The skill does not merge. A human reviews the report and merges the pull request into `dev`.
+The skill does not merge and does not enable auto-merge. A human reviews the report and either merges or arms squash auto-merge on the feature pull request into `dev`.
 
 ## Planning and Integration Tickets
 
@@ -396,7 +398,7 @@ Superpowers `requesting-code-review` judges the exact SHA. Reviewers may return 
 
 The CTO guards product scope, architecture, roadmap alignment, and durable decisions after code review.
 
-If implementation conflicts with steering, the CTO blocks the feature and proposes a separate steering change for human approval. It may not silently reinterpret steering, patch the feature branch, or merge to `main`.
+If implementation conflicts with steering, the CTO returns `STEERING_CHANGE_REQUIRED`, blocks feature merge readiness, and **opens a separate pull request** from branch `steering/<linear-id>-<short-slug>` into `dev` that contains only the proposed steering/ADR/roadmap edits. It may not silently reinterpret steering, patch the feature branch, arm auto-merge, or merge either PR.
 
 ### Human
 
@@ -405,10 +407,10 @@ The human:
 - approves generated plans;
 - moves Linear work to `Agent Ready`;
 - resolves ambiguity and escalations;
-- approves steering changes;
+- reviews and merges (or rejects) CTO steering PRs before re-running the feature CTO gate;
 - reviews merge-readiness reports;
-- merges feature pull requests into `dev`; and
-- approves and merges milestone releases into `main`.
+- arms squash auto-merge (or merges) feature pull requests into `dev`; and
+- approves and merges milestone releases into `main` without auto-merge.
 
 ## Gate Semantics
 
