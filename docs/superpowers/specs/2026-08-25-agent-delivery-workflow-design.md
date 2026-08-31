@@ -2,7 +2,7 @@
 
 **Date:** 2026-08-25  
 **Status:** Approved  
-**Revised:** 2026-08-31 — thin `/agent-delivery` wraps Superpowers; human-armed feature→`dev` auto-merge; CTO opens steering PRs on drift
+**Revised:** 2026-08-31 — CTO-gated agent auto-merge: `ready-to-merge` label + squash auto-merge to `dev` after APPROVE; steering PRs → `main`; humans merge `dev` → `main`
 
 ## Purpose
 
@@ -15,7 +15,7 @@ The initial system uses two project-local Cursor skills invoked manually:
 /agent-delivery LINEAR-ID
 ```
 
-`/plan-roadmap` turns the approved roadmap into milestones and draft Linear work. `/agent-delivery` is a thin orchestrator: it owns Linear and GitHub gates, then reuses Superpowers skills for implementation, review, and branch finish. Humans approve roadmap changes, move tickets to `Agent Ready`, resolve ambiguity, arm feature→`dev` auto-merge when appropriate, and merge milestone releases to `main`. Automation is added only after repeated manual runs reveal stable transitions worth automating.
+`/plan-roadmap` turns the approved roadmap into milestones and draft Linear work. `/agent-delivery` is a thin orchestrator: it owns Linear and GitHub gates, then reuses Superpowers skills for implementation, review, and branch finish. Humans approve roadmap changes, move tickets to `Agent Ready`, resolve ambiguity, merge steering PRs into `main`, and merge milestone releases `dev` → `main`. After the CTO gate returns `APPROVE`, the agent labels the feature PR `ready-to-merge` and arms squash auto-merge into `dev`.
 
 ## Decisions
 
@@ -26,8 +26,8 @@ The initial system uses two project-local Cursor skills invoked manually:
 - The first version runs locally in Cursor and is started manually.
 - The workflows live in `.cursor/skills/plan-roadmap/` and `.cursor/skills/agent-delivery/` in the product repository.
 - Feature branches target `dev`. Milestone release pull requests target `main`.
-- Feature → `dev`: after a ready-for-review PR is green on required checks, a **human arms** GitHub squash auto-merge (`gh pr merge --auto --squash` or the PR UI). Agents open the PR and never enable auto-merge.
-- Milestone `dev` → `main`: human merges only; do not arm auto-merge on release PRs.
+- Feature → `dev`: after verification, code review, and **CTO `APPROVE`**, the agent adds GitHub label `ready-to-merge` and runs `gh pr merge --auto --squash` on the ready-for-review feature PR. GitHub merges when required checks (`python`, `typescript`) are green. Humans do not arm each feature PR manually.
+- Milestone `dev` → `main`: human merges only; do not arm auto-merge on release PRs; do not add `ready-to-merge` on release PRs.
 - Backend implementation reuses Superpowers `subagent-driven-development` with its stock implementer prompt.
 - Frontend implementation reuses the same Superpowers delivery loop, but dispatches the project `frontend-developer` agent (specialized design packet) instead of the stock implementer.
 - Code review and branch completion reuse Superpowers `requesting-code-review` and `finishing-a-development-branch`.
@@ -61,7 +61,7 @@ Cursor Origin remains an option for later evaluation. The skill must avoid forge
 - Superpowers code review, plus a thin CTO scope/steering-drift gate
 - At most two repair cycles
 - Merge-readiness reporting via Superpowers finish flow plus Linear/GitHub status notes
-- Human-armed squash auto-merge for feature → `dev` (agents never arm)
+- CTO-gated agent auto-merge for feature → `dev` (`ready-to-merge` label + `gh pr merge --auto --squash` after CTO `APPROVE`)
 - Human-approved milestone pull requests from `dev` to `main` (no auto-merge)
 - On `STEERING_CHANGE_REQUIRED`, CTO opens a separate `steering/<linear-id>-…` PR into **`main`**, then rebases `dev` onto `main` after merge (does not patch the feature branch)
 
@@ -74,7 +74,8 @@ Cursor Origin remains an option for later evaluation. The skill must avoid forge
 - Webhook ingestion
 - Credential broker
 - Distinct GitHub App identities for every role
-- Agent-armed or fully unattended auto-merge (human arming of native GitHub auto-merge for feature→`dev` is in scope; see M1-D5 / DCP-30)
+- Auto-merge on `dev` → `main` release PRs
+- Auto-merge without CTO `APPROVE` and the `ready-to-merge` label on feature PRs
 - A generalized CI workflow language
 - A separate delivery-platform repository
 - Durable multi-ticket scheduling and concurrent orchestration
@@ -340,9 +341,9 @@ When gates pass, the skill invokes Superpowers `finishing-a-development-branch` 
 - CTO verdict;
 - repair history;
 - unresolved non-blocking risks; and
-- explicit actions required from the human.
+- explicit actions required from the human (if any remain after agent merge arming).
 
-The skill does not merge and does not enable auto-merge. A human reviews the report and either merges or arms squash auto-merge on the feature pull request into `dev`.
+When gates pass and the CTO verdict is `APPROVE`, the skill invokes Superpowers `finishing-a-development-branch`, writes the merge-readiness note, adds GitHub label `ready-to-merge`, and runs `gh pr merge --auto --squash` on the feature pull request into `dev`. GitHub completes the squash merge when required checks are green.
 
 ## Planning and Integration Tickets
 
@@ -408,9 +409,9 @@ The human:
 - moves Linear work to `Agent Ready`;
 - resolves ambiguity and escalations;
 - reviews and merges (or rejects) CTO steering PRs before re-running the feature CTO gate;
-- reviews merge-readiness reports;
-- arms squash auto-merge (or merges) feature pull requests into `dev`; and
 - approves and merges milestone releases into `main` without auto-merge.
+
+Feature→`dev` squash auto-merge is agent-armed after CTO `APPROVE` (`ready-to-merge` label + `gh pr merge --auto --squash`). Humans do not arm each feature PR manually.
 
 ## Gate Semantics
 

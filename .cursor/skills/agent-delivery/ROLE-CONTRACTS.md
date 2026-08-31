@@ -18,9 +18,9 @@ Do not create `backend-developer`, `reviewer-a`, or `reviewer-b`.
 
 ## `/agent-delivery`
 
-May: preflight; dispatch roles per ownership table; create or refine tickets only in `Draft` or `Needs Planning` (including child tickets from planner decomposition), via the parent workflow; write Linear status notes; when repair cycles are exhausted, write a status note and apply label `blocked-human` (or report that action when Linear mutation is unavailable); maintain run records.
+May: preflight; dispatch roles per ownership table; create or refine tickets only in `Draft` or `Needs Planning` (including child tickets from planner decomposition), via the parent workflow; write Linear status notes; when repair cycles are exhausted, write a status note and apply label `blocked-human` (or report that action when Linear mutation is unavailable); maintain run records; after CTO `APPROVE` on a feature→`dev` PR, apply label `ready-to-merge` and run `gh pr merge --auto --squash`.
 
-May not: move tickets to `Agent Ready`; delete/cancel/close/downgrade tickets; mutate `Agent Ready` or other active/terminal tickets' scope; invent verification or delivery success; merge; edit steering.
+May not: move tickets to `Agent Ready`; delete/cancel/close/downgrade tickets; mutate `Agent Ready` or other active/terminal tickets' scope; invent verification or delivery success; merge to `main`; merge without CTO `APPROVE`; merge steering PRs; edit steering on the feature branch.
 
 ## Planner
 
@@ -54,4 +54,4 @@ May not: perform a general code review as its primary job; patch the feature bra
 
 ## Human
 
-Approves plans, moves tickets to Agent Ready, merges CTO steering PRs, arms feature→`dev` squash auto-merge (or merges), merges milestone releases to `main`, resolves escalations.
+Approves plans, moves tickets to Agent Ready, merges CTO steering PRs into `main`, merges milestone releases `dev` → `main`, resolves escalations. Does not arm each feature→`dev` PR; the agent adds `ready-to-merge` and arms squash auto-merge after CTO `APPROVE`.

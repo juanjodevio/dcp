@@ -36,7 +36,7 @@ Fail closed and state the human action when:
 - review or CTO blocks;
 - repair cycles are exhausted (max 2).
 
-Never merge. Never enable auto-merge. Never edit steering on the **feature** branch to unblock a ticket (CTO opens a separate `steering/…` PR instead). Never invent verification success.
+Never merge to `main`. Never merge a steering PR into `main`. Never merge a feature PR without CTO `APPROVE`, passing code review, verification evidence, and label `ready-to-merge`. Never edit steering on the **feature** branch to unblock a ticket (CTO opens a separate `steering/…` PR instead). Never invent verification success.
 
 ## Linear writes (live only)
 
@@ -76,5 +76,10 @@ Forbidden: move to `Agent Ready`; delete/cancel/close/downgrade tickets; mutate 
 8. Launch fresh `cto` with the CTO Report template; store in `cto-review.md`.
 9. On `STEERING_CHANGE_REQUIRED`: ensure the CTO opened (or open per CTO contract) a `steering/<linear-id>-…` PR into **`main`** with only the required steering edits; record the PR URL in `cto-review.md` and the run record; write a Linear status note; apply label `blocked-human`; stop. Do not fold steering into the feature branch. After the steering PR merges, rebase `dev` onto `main`. Do not count this as an implementer repair cycle.
 10. On other blocking verification or code-review verdicts, run the repair loop (same implementer path as the ticket). Each new SHA invalidates prior evidence. After two unsuccessful repairs, write a status note, apply label `blocked-human`, and stop.
-11. When gates pass, invoke Superpowers `finishing-a-development-branch` for PR options toward `dev`, write the Merge Readiness Report, and leave merge to a human. Finish never merges and never enables auto-merge; humans arm auto-merge on the PR after the agent opens a ready-for-review PR.
+11. When gates pass (including CTO `APPROVE`), invoke Superpowers `finishing-a-development-branch` for PR options toward `dev`, write the Merge Readiness Report, then complete agent merge:
+    - Ensure the feature PR is ready for review (not draft).
+    - Ensure the repo has label `ready-to-merge` (`gh label create "ready-to-merge" --description "CTO approved; agent may arm squash auto-merge to dev" --color 1d76db` if missing).
+    - Add `ready-to-merge` to the feature PR (`gh pr edit --add-label ready-to-merge`).
+    - Arm squash auto-merge into `dev`: `gh pr merge --auto --squash`.
+    - Record the label and merge command in `merge-readiness.md`. Do not merge to `main` or arm auto-merge on steering or release PRs.
 12. Write Linear status notes per permitted writes above.
