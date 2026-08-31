@@ -57,5 +57,6 @@ Use `READY_TO_REREVIEW`, `BLOCKED_HUMAN`, or `BLOCKED`.
 ### Repair history
 ### Unresolved non-blocking risks
 ### Human actions required
+List only actions the human must still take (e.g. merge a steering PR into `main`, rebase `dev`, milestone `dev` → `main`). When the agent armed feature auto-merge, write `None — agent labeled ready-to-merge and ran gh pr merge --auto --squash`.
 ### Result
 Use `READY_TO_MERGE`, `PARTIAL`, or `BLOCKED`.

@@ -103,9 +103,9 @@ Present tooling (CI / verification):
 
 ## Repository gates
 
-- Feature PRs target `dev`. After CI is green, a human enables auto-merge (squash): `gh pr merge --auto --squash` or the PR UI.
-- `/agent-delivery` must not enable auto-merge.
-- Milestone releases: human merges `dev` → `main`.
+- Feature PRs target `dev`. After verification, code review, and CTO `APPROVE`, `/agent-delivery` adds GitHub label `ready-to-merge` and runs `gh pr merge --auto --squash`. GitHub merges when required checks (`python`, `typescript`) are green.
+- `/agent-delivery` must not merge to `main`, merge steering PRs, or arm auto-merge without CTO `APPROVE` and the `ready-to-merge` label.
+- Milestone releases: human merges `dev` → `main` (no auto-merge).
 - AI PR review (CodeRabbit) is deferred.
 - Rulesets on `dev` and `main` require status checks named exactly `python` and `typescript`, require a PR (no direct push), and do not require approving reviews on `dev`.
 
