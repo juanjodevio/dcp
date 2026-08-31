@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>dcp — self-hostable dbt Core control plane</title>
+    <meta
+      name="description"
+      content="Open-source, self-hostable control plane for dbt Core with Elementary. Run jobs on Docker Compose."
+    />
+    <meta name="theme-color" content="#000000" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+    <div class="grain" aria-hidden="true"></div>
+    <header>
+      <p class="mark" translate="no">dcp</p>
+      <a class="nav-cta" href="https://github.com/juanjodevio/dcp">View on GitHub</a>
+    </header>
+    <main id="main">
+      <section class="hero">
+        <picture>
+          <source type="image/webp" srcset="img/hero-horizon.webp" />
+          <img
+            class="hero-photo"
+            src="img/hero-horizon.jpg"
+            width="1536"
+            height="1024"
+            alt="Night horizon with a thin atmospheric glow"
+            fetchpriority="high"
+          />
+        </picture>
+        <div class="hero-copy">
+          <h1>Open-source control plane for dbt Core</h1>
+          <p class="lede">
+            dcp is a self-hostable alternative to commercial dbt Cloud–like ops:
+            projects, jobs, runs, artifacts, lineage, and Elementary — without
+            locking the core to one cloud or orchestrator.
+          </p>
+          <p class="status">
+            The product is under active development in this repository. This page
+            is the public face until Docker Compose ships.
+          </p>
+          <a class="cta" href="https://github.com/juanjodevio/dcp">View on GitHub</a>
+        </div>
+      </section>
+      <section class="why">
+        <h2>Why it exists</h2>
+        <p>
+          Teams that want Cloud-like job and run UX around dbt Core either buy a
+          vendor stack or glue CI, schedulers, and scripts. dcp centralizes that
+          operator workflow and keeps dbt’s model DAG inside dbt.
+        </p>
+      </section>
+      <section class="scope">
+        <h2>What v0.1 covers</h2>
+        <ul class="scope-list">
+          <li>Projects, environments, jobs, and schedules</li>
+          <li>Manual and cron-driven runs with logs and artifacts</li>
+          <li>Basic lineage from dbt artifacts</li>
+          <li>Elementary as required observability</li>
+          <li>Local Docker runner, optional AWS Batch, packaged with Docker Compose</li>
+        </ul>
+      </section>
+      <section class="run">
+        <h2>How you run it</h2>
+        <p>
+          You self-host. v0.1 is single-user with no auth — bind it privately.
+          Compose, including a required local dbt runner image, is the packaging
+          target. Nothing here is a hosted SaaS.
+        </p>
+      </section>
+    </main>
+    <footer>
+      <p>
+        <a href="https://github.com/juanjodevio/dcp">github.com/juanjodevio/dcp</a>
+      </p>
+    </footer>
+  </body>
+</html>
