@@ -6,7 +6,7 @@
 
 ## Purpose
 
-Stand up repository merge gates and toolchains so Cursor Cloud `/agent-delivery` can open feature PRs into `dev`, enable auto-merge, and land when deterministic CI is green—without human approving reviews on that path. Milestone releases (`dev` → `main`) stay human-merged.
+Stand up repository merge gates and toolchains so Cursor Cloud `/agent-delivery` can open feature PRs into `dev` and land when deterministic CI is green and a **human has armed auto-merge**—without requiring human *approving reviews* on that path. Milestone releases (`dev` → `main`) stay human-merged.
 
 ## Decisions
 
@@ -18,7 +18,7 @@ Stand up repository merge gates and toolchains so Cursor Cloud `/agent-delivery`
 | Required checks on `dev`/`main` | Exactly `python` and `typescript` |
 | Human approving review on `dev` | Not required |
 | Merge method (feature → `dev`) | Squash |
-| Auto-merge arming | `/agent-delivery` finish runs `gh pr merge --auto --squash` (or equivalent) |
+| Auto-merge arming | **Human** enables auto-merge on the PR (repo `allow_auto_merge` + rulesets are human-configured once; agents do not arm merge) |
 | Python | `uv` + Ruff (lint + format) + mypy + pytest |
 | TypeScript | `pnpm` + ESLint + Prettier + `tsc` + Vitest |
 | Landing contract tests | Migrate from Python unittest to **Vitest under `www/`**; delete `tests/www/test_landing_copy.py` once green |
@@ -148,26 +148,24 @@ Exact script names may be workspace-filtered (`pnpm --filter www test`, etc.) bu
 
 ## Cursor Cloud agent-delivery
 
-Primary path: Cloud agent runs `/agent-delivery`, pushes a feature branch, opens a **ready-for-review** PR into `dev`, and **arms auto-merge**.
+Primary path: Cloud agent runs `/agent-delivery`, pushes a feature branch, and opens a **ready-for-review** PR into `dev`. A **human** then arms auto-merge on that PR (UI or `gh pr merge --auto --squash`). GitHub merges when `python` and `typescript` are green.
 
 ### Constraints
 
 - Feature branches are unprotected; only `dev`/`main` use rulesets.
-- Connected GitHub identity needs write: push branch, open PR, enable auto-merge.
-- Do not require human approving reviews, CODEOWNERS approval, or signed commits in this milestone unless Cloud’s GitHub identity is proven to satisfy them.
+- Connected GitHub identity for Cloud needs write: push branch and open PR. Enabling auto-merge is a **human** action (write access on the human account).
+- Do not require human *approving reviews*, CODEOWNERS approval, or signed commits in this milestone unless Cloud’s GitHub identity is proven to satisfy them. Human arming auto-merge is not the same as an approving review.
 - Cloud and CI share the same install/test commands from `TECH.md`.
-- Finish does **not** wait on deferred AI review.
-- Cloud agents target **`dev` only**; they do not auto-merge to `main`.
+- Finish does **not** wait on deferred AI review and does **not** enable auto-merge.
+- Cloud agents target **`dev` only**; they do not merge to `main`.
 
-### Finish step (required)
+### Human arming step
 
-After opening the PR (or when finishing an existing PR), `/agent-delivery` enables auto-merge with squash, e.g.:
+After the agent opens (or updates) the PR:
 
-```bash
-gh pr merge --auto --squash
-```
-
-If checks are already green, GitHub may merge immediately; otherwise the PR stays armed until `python` and `typescript` pass.
+1. Confirm the PR is ready for review (not draft).
+2. Enable auto-merge with squash (GitHub UI or `gh pr merge --auto --squash`).
+3. If checks are already green, GitHub may merge immediately; otherwise the PR stays armed until `python` and `typescript` pass.
 
 ## Steering updates (same change set as implementation)
 
@@ -175,7 +173,7 @@ If checks are already green, GitHub may merge immediately; otherwise the PR stay
 - `docs/STRUCTURE.md` — `.github/` CI; `www` as pnpm package for tests; test layout.
 - `AGENTS.md` — point at new verification commands only (do not duplicate full policy).
 - Add a short ADR locking pnpm (parity with ADR-0007 for uv) and update the ADR index; mirror the lock in `docs/TECH.md`.
-- Agent-delivery skill / finish notes: arm auto-merge; no AI-review wait.
+- Agent-delivery skill / finish notes: open ready-for-review PR into `dev`; do **not** arm auto-merge (human does); no AI-review wait.
 
 ## Non-goals
 
@@ -185,6 +183,7 @@ If checks are already green, GitHub may merge immediately; otherwise the PR stay
 - AI PR review as a merge gate.
 - Scaffolding full FastAPI/Next.js product beyond minimal placeholders needed for green CI.
 - Path-filtered CI that skips required jobs.
+- `/agent-delivery` (or other automation) enabling auto-merge on PRs.
 
 ## Failure modes
 
@@ -192,16 +191,17 @@ If checks are already green, GitHub may merge immediately; otherwise the PR stay
 |---------|----------|
 | Required check name mismatch | Treat job names as a contract; update ruleset with the rename |
 | Missing/out-of-date lockfile | CI fails closed |
-| Draft PR left draft | Auto-merge never runs; finish must mark ready for review |
-| Auto-merge disabled on repo | Finish fails; enable `allow_auto_merge` |
+| Draft PR left draft | Auto-merge never runs; agent or human must mark ready for review before arming |
+| Auto-merge disabled on repo | Human cannot arm; enable `allow_auto_merge` once |
+| Human never arms auto-merge | PR stays open even when CI is green |
 | Red CI | PR does not merge; agent repair cycle / human intervention |
 
 ## Success criteria
 
-1. Feature PR into `dev` with green `python` + `typescript` squash-merges via auto-merge without a human approving review.
+1. Feature PR into `dev` with green `python` + `typescript` squash-merges via auto-merge after a **human arms** it, without a human approving review.
 2. Direct pushes to `dev`/`main` are blocked by rulesets.
 3. `dev` → `main` still requires a human merge.
 4. Landing contract is enforced by Vitest under `www/`; old Python landing unittest is gone.
 5. `TECH.md` / `AGENTS.md` document commands that match CI.
 6. No AI-review secret or required AI check is introduced.
-7. Cursor Cloud finish can arm auto-merge with `gh` against this repo configuration.
+7. `/agent-delivery` opens ready-for-review PRs into `dev` and does not itself enable auto-merge; humans can arm auto-merge against this repo configuration.
