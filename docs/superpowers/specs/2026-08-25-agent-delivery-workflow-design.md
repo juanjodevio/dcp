@@ -425,6 +425,8 @@ Bootstrap enforcement consists of:
 - explicit human approval; and
 - human-controlled merges.
 
+**Repository rulesets:** attach required CI contexts (`python`, `typescript`) to **`dev` only after** `.github/workflows/ci.yml` has run at least once on that branch. Do **not** require those contexts on **`main`** until the CI workflow exists on `main` (typically when DCP-30 lands on `dev` and a human merges `dev` → `main`). Steering PRs into `main` are docs-only and must not be blocked by checks that cannot run yet.
+
 Cursor hooks may block obvious protected-branch or merge commands, but hooks are also guardrails rather than server-side security boundaries.
 
 Automated unattended merging requires external enforcement and is deferred.
