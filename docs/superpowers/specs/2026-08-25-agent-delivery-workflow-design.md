@@ -63,7 +63,7 @@ Cursor Origin remains an option for later evaluation. The skill must avoid forge
 - Merge-readiness reporting via Superpowers finish flow plus Linear/GitHub status notes
 - Human-armed squash auto-merge for feature → `dev` (agents never arm)
 - Human-approved milestone pull requests from `dev` to `main` (no auto-merge)
-- On `STEERING_CHANGE_REQUIRED`, CTO opens a separate `steering/<linear-id>-…` PR into `dev` (does not patch the feature branch)
+- On `STEERING_CHANGE_REQUIRED`, CTO opens a separate `steering/<linear-id>-…` PR into **`main`**, then rebases `dev` onto `main` after merge (does not patch the feature branch)
 
 ### Deferred
 
@@ -398,7 +398,7 @@ Superpowers `requesting-code-review` judges the exact SHA. Reviewers may return 
 
 The CTO guards product scope, architecture, roadmap alignment, and durable decisions after code review.
 
-If implementation conflicts with steering, the CTO returns `STEERING_CHANGE_REQUIRED`, blocks feature merge readiness, and **opens a separate pull request** from branch `steering/<linear-id>-<short-slug>` into `dev` that contains only the proposed steering/ADR/roadmap edits. It may not silently reinterpret steering, patch the feature branch, arm auto-merge, or merge either PR.
+If implementation conflicts with steering, the CTO returns `STEERING_CHANGE_REQUIRED`, blocks feature merge readiness, and **opens a separate pull request** from branch `steering/<linear-id>-<short-slug>` into **`main`** that contains only the proposed steering/ADR/roadmap edits. After a human merges that PR, **`dev` is rebased onto `main`**. It may not silently reinterpret steering, patch the feature branch, arm auto-merge, or merge either PR.
 
 ### Human
 

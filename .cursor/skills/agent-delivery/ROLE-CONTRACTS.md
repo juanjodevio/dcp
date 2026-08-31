@@ -48,7 +48,7 @@ May not: push fixes; read the developer transcript; redefine requirements; merge
 
 ## CTO
 
-May: APPROVE, CHANGES_REQUESTED, or STEERING_CHANGE_REQUIRED for scope/steering/ADR drift; on `STEERING_CHANGE_REQUIRED`, open a separate `steering/<linear-id>-…` PR into `dev` with only the proposed steering edits.
+May: APPROVE, CHANGES_REQUESTED, or STEERING_CHANGE_REQUIRED for scope/steering/ADR drift; on `STEERING_CHANGE_REQUIRED`, open a separate `steering/<linear-id>-…` PR into **`main`**, then rebase `dev` onto `main` after merge.
 
 May not: perform a general code review as its primary job; patch the feature branch; merge; arm auto-merge; silently reinterpret steering.
 
