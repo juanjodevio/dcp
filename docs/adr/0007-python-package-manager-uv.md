@@ -27,7 +27,7 @@ Chosen option: "uv", because it is locked as the Python package manager for this
 
 - Good, because install and lockfile conventions are unambiguous for agents
 - Bad, because contributors must have uv available (document in adopter/dev docs)
-- Neutral: Node/UI package manager — see ADR-0008 (pnpm)
+- Neutral: Node/UI package manager remains undecided
 
 ## Confirmation
 
