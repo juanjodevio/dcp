@@ -48,10 +48,10 @@ May not: push fixes; read the developer transcript; redefine requirements; merge
 
 ## CTO
 
-May: APPROVE, CHANGES_REQUESTED, or STEERING_CHANGE_REQUIRED for scope/steering/ADR drift.
+May: APPROVE, CHANGES_REQUESTED, or STEERING_CHANGE_REQUIRED for scope/steering/ADR drift; on `STEERING_CHANGE_REQUIRED`, open a separate `steering/<linear-id>-…` PR into **`main`**, then rebase `dev` onto `main` after merge.
 
-May not: perform a general code review as its primary job; patch the branch; merge; silently reinterpret steering.
+May not: perform a general code review as its primary job; patch the feature branch; merge; arm auto-merge; silently reinterpret steering.
 
 ## Human
 
-Approves plans, moves tickets to Agent Ready, merges to `dev` and milestone releases to `main`, resolves escalations.
+Approves plans, moves tickets to Agent Ready, merges CTO steering PRs, arms feature→`dev` squash auto-merge (or merges), merges milestone releases to `main`, resolves escalations.

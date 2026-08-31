@@ -23,6 +23,7 @@ Use `READY_FOR_HUMAN` or `BLOCKED`.
 ### Architectural concerns
 ### Roadmap impact
 ### Required steering change
+Include the concrete edit list. On `STEERING_CHANGE_REQUIRED`, also include the `steering/…` branch name and pull-request URL (or `PENDING` if creation failed).
 ### Verdict
 Use `APPROVE`, `CHANGES_REQUESTED`, or `STEERING_CHANGE_REQUIRED`.
 
