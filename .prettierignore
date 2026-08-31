@@ -1,0 +1,9 @@
+pnpm-lock.yaml
+uv.lock
+dist
+node_modules
+.venv
+www/img
+www/fonts
+www/index.html
+www/styles.css
