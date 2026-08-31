@@ -1,0 +1,10 @@
+{
+  "name": "@dcp/ui",
+  "private": true,
+  "scripts": {
+    "lint": "true",
+    "format:check": "true",
+    "typecheck": "true",
+    "test": "true"
+  }
+}

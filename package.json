@@ -1,0 +1,11 @@
+{
+  "name": "dcp",
+  "private": true,
+  "packageManager": "pnpm@9.15.9",
+  "scripts": {
+    "lint": "pnpm -r run lint",
+    "format:check": "pnpm -r run format:check",
+    "typecheck": "pnpm -r run typecheck",
+    "test": "pnpm -r run test"
+  }
+}
