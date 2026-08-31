@@ -1,10 +1,17 @@
 {
   "name": "@dcp/ui",
   "private": true,
+  "type": "module",
   "scripts": {
-    "lint": "true",
-    "format:check": "true",
-    "typecheck": "true",
-    "test": "true"
+    "test": "vitest run",
+    "lint": "eslint .",
+    "format:check": "prettier --check .",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "eslint": "^9.22.0",
+    "prettier": "^3.5.3",
+    "typescript": "^5.8.2",
+    "vitest": "^3.0.9"
   }
 }
