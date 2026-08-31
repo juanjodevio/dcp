@@ -1,8 +1,8 @@
 # Repo CI and Automerge Setup Design
 
 **Date:** 2026-08-31  
-**Status:** Ready for review  
-**Related:** `docs/TECH.md`, `docs/STRUCTURE.md`, `AGENTS.md`, [ADR-0007](../../adr/0007-python-package-manager-uv.md), `docs/superpowers/specs/2026-08-25-agent-delivery-workflow-design.md`, `docs/superpowers/specs/2026-08-28-marketing-landing-design.md`
+**Status:** Accepted  
+**Related:** `docs/TECH.md`, `docs/STRUCTURE.md`, `AGENTS.md`, [ADR-0007](../../adr/0007-python-package-manager-uv.md), `docs/superpowers/specs/2026-08-25-agent-delivery-workflow-design.md`, `docs/superpowers/specs/2026-08-28-marketing-landing-design.md`, [DCP-30](https://linear.app/medaiec/issue/DCP-30) (`M1-D5`)
 
 ## Purpose
 
