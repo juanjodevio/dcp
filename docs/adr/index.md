@@ -11,3 +11,4 @@ Manual ADR maintenance (`adr-tools` was not available when this directory was in
 | [ADR-0005](./0005-normalize-core-lineage-metadata.md) | Accepted | Normalize core lineage in Postgres; raw artifacts in object storage |
 | [ADR-0006](./0006-defer-auth-require-elementary.md) | Accepted | No auth in v0.1; Elementary required |
 | [ADR-0007](./0007-python-package-manager-uv.md) | Accepted | Python package manager is uv |
+| [ADR-0008](./0008-node-package-manager-pnpm.md) | Accepted | Node package manager is pnpm |

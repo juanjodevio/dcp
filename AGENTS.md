@@ -18,7 +18,7 @@
 
 ## Commands
 
-Verification entrypoint: `python3 -m unittest tests/www/test_landing_copy.py` (owning list: `docs/TECH.md`). `/agent-delivery` must record evidence for this command against the feature SHA; do not invent success. Python package manager is **uv** ([ADR-0007](docs/adr/0007-python-package-manager-uv.md)). Planned app commands (`uv sync`, `docker compose up`) remain in `docs/TECH.md` until scaffolds land.
+Verification entrypoint: `pnpm --filter @dcp/www test` (owning list: `docs/TECH.md`). `/agent-delivery` must record evidence for this command against the feature SHA; do not invent success. Package managers: Python **uv** ([ADR-0007](docs/adr/0007-python-package-manager-uv.md)), Node **pnpm** ([ADR-0008](docs/adr/0008-node-package-manager-pnpm.md)). Full CI command matrix lives in `docs/TECH.md`.
 
 ## Agent Workflow
 

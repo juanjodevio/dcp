@@ -36,7 +36,7 @@ Fail closed and state the human action when:
 - review or CTO blocks;
 - repair cycles are exhausted (max 2).
 
-Never merge. Never edit steering to unblock a ticket. Never invent verification success.
+Never merge. Never enable auto-merge. Never edit steering to unblock a ticket. Never invent verification success.
 
 ## Linear writes (live only)
 
@@ -71,9 +71,9 @@ Forbidden: move to `Agent Ready`; delete/cancel/close/downgrade tickets; mutate 
 3. **Backend:** invoke Superpowers `subagent-driven-development` with the stock implementer prompt.
 4. **Frontend:** invoke the same SDD process and file-handoff rules, but fill the implementer dispatch from `.cursor/agents/frontend-developer.md` instead of the stock implementer body. Do not edit Superpowers plugin files.
 5. **Integration:** verify combined behavior after dependencies exist on `dev`; do not reimplement child tickets here.
-6. Record verification evidence for the exact head SHA in `verification.md`.
+6. Record verification evidence for the exact head SHA in `verification.md` using the `AGENTS.md` verification entrypoint.
 7. Invoke Superpowers `requesting-code-review`; store output in `code-review.md`.
 8. Launch fresh `cto` with the CTO Report template; store in `cto-review.md`.
 9. On any blocking verification, review, or CTO verdict, run the repair loop (same implementer path as the ticket). Each new SHA invalidates prior evidence. After two unsuccessful repairs, write a status note, apply label `blocked-human`, and stop.
-10. When gates pass, invoke Superpowers `finishing-a-development-branch` for PR options toward `dev`, write the Merge Readiness Report, and leave merge to a human.
+10. When gates pass, invoke Superpowers `finishing-a-development-branch` for PR options toward `dev`, write the Merge Readiness Report, and leave merge to a human. Finish never merges and never enables auto-merge; humans arm auto-merge on the PR after the agent opens a ready-for-review PR.
 11. Write Linear status notes per permitted writes above.
